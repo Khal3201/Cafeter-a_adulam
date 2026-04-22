@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reactivar – Cafetería Adulam</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+  <div class="logo-area">
+    <div class="logo-icon">☕</div>
+    <h2>Reactivar app</h2>
+    <p class="subtitle">Ingresa la clave de emergencia</p>
+  </div>
+
+  {% if error %}
+    <div class="alert">{{ error }}</div>
+  {% endif %}
+
+  <form action="/reactivar" method="POST">
+    <label>Clave de emergencia</label>
+    <input type="password" name="clave" placeholder="••••••••" required autocomplete="off">
+    <button type="submit">Reactivar</button>
+  </form>
+
+  <a href="/">Volver al inicio</a>
+</div>
+</body>
+</html>

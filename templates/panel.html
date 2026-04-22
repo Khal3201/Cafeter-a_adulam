@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#6b3e26">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="/static/icon-192.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menú – Cafetería Adulam</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<script id="datos-opciones" type="application/json">{{ opciones|tojson }}</script>
+
+<div class="container">
+  <div class="logo-area">
+    <div class="logo-icon">☕</div>
+    <h2>Hola, {{ nombre|capitalize }}!</h2>
+    <p class="subtitle">Asiento <strong>{{ asiento|upper }}</strong></p>
+  </div>
+
+  <h3 class="section-title">Nuestro Menú</h3>
+
+  {% for producto in productos %}
+  <div class="menu-item">
+    <div class="menu-info">
+      <strong>{{ producto.nombre }}</strong>
+      <span class="categoria-tag">{{ producto.categoria }}</span>
+      <p class="precio">${{ "%.0f"|format(producto.precio) }}</p>
+    </div>
+    <button
+      class="btn-agregar"
+      data-id="{{ producto.id }}"
+      data-nombre="{{ producto.nombre }}"
+      data-precio="{{ producto.precio }}"
+      data-sabores="{{ producto.tiene_sabores }}"
+      data-leche="{{ producto.tiene_leche }}"
+      data-hielo="{{ producto.tiene_hielo }}"
+      data-azucar="{{ producto.tiene_azucar }}"
+      data-cafe="{{ producto.tiene_cafe }}"
+      onclick="abrirOpciones(this)">
+      + Agregar
+    </button>
+  </div>
+  {% endfor %}
+
+  <div class="pedido-section">
+    <h3 class="section-title">Tu pedido</h3>
+    <ul id="listaPedido" class="lista-pedido">
+      <li class="empty-cart" id="emptyMsg">No has agregado nada aún</li>
+    </ul>
+    <div class="total-row">
+      <span>Total</span>
+      <span class="total-monto">$<span id="total">0</span></span>
+    </div>
+    <form action="/pagar" method="POST" onsubmit="return enviarPedido()">
+      <input type="hidden" name="nombre" value="{{ nombre }}">
+      <input type="hidden" name="asiento" value="{{ asiento }}">
+      <input type="hidden" name="articulos_json" id="articulos_json" value="[]">
+      <button type="submit" id="btnPedir" disabled>Realizar pedido</button>
+    </form>
+    <a href="/logout">Cancelar y salir</a>
+  </div>
+</div>
+
+<!-- Modal de personalización -->
+<div id="modalOverlay" class="modal-overlay" style="display:none" onclick="cerrarModal(event)">
+  <div class="modal-box">
+    <h3 id="modalTitulo">Personaliza tu bebida</h3>
+    <div id="modalContenido"></div>
+    <div class="modal-btns">
+      <button onclick="cancelarModal()">Cancelar</button>
+      <button class="btn-confirmar" onclick="confirmarItem()">Agregar al pedido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var opcionesData = JSON.parse(document.getElementById('datos-opciones').textContent);
+var carritoTotal = 0;
+var carritoItems = [];
+var itemActual   = null;
+
+function abrirOpciones(btn) {
+  var id          = parseInt(btn.dataset.id,      10);
+  var nombre      = btn.dataset.nombre;
+  var precio      = parseFloat(btn.dataset.precio);
+  var tieneSabores = parseInt(btn.dataset.sabores, 10);
+  var tieneLeche   = parseInt(btn.dataset.leche,   10);
+  var tieneHielo   = parseInt(btn.dataset.hielo,   10);
+  var tieneAzucar  = parseInt(btn.dataset.azucar,  10);
+  var tieneCafe    = parseInt(btn.dataset.cafe,    10);
+
+  itemActual = { id: id, nombre: nombre, precio: precio };
+  document.getElementById('modalTitulo').textContent = nombre;
+
+  var opts = opcionesData[id] || {};
+  var html = '';
+
+  if (tieneSabores) {
+    var sabores = opts['sabor'] || [];
+    if (sabores.length === 0) {
+      html += '<p class="sin-stock">Sin sabores disponibles por el momento</p>';
+    } else {
+      html += '<div class="opcion-grupo"><label>Sabor</label>';
+      html += '<select id="opt_sabor"><option value="">-- Elige un sabor --</option>';
+      for (var i = 0; i < sabores.length; i++) {
+        html += '<option value="' + sabores[i].valor + '">' + sabores[i].valor + '</option>';
+      }
+      html += '</select></div>';
+    }
+  }
+
+  if (tieneLeche) {
+    var leches = opts['leche'] || [];
+    if (leches.length > 0) {
+      html += '<div class="opcion-grupo"><label>Tipo de leche</label>';
+      html += '<select id="opt_leche"><option value="">-- Elige tipo de leche --</option>';
+      for (var j = 0; j < leches.length; j++) {
+        html += '<option value="' + leches[j].valor + '">' + leches[j].valor + '</option>';
+      }
+      html += '</select></div>';
+    }
+  }
+
+  if (tieneCafe) {
+    html += '<div class="opcion-grupo"><label>Cantidad de caf\u00e9</label>';
+    html += '<div class="radio-group">';
+    html += '<label><input type="radio" name="cafe" value="Sin caf\u00e9"> Sin caf\u00e9</label>';
+    html += '<label><input type="radio" name="cafe" value="Poco caf\u00e9"> Poco</label>';
+    html += '<label><input type="radio" name="cafe" value="Normal" checked> Normal</label>';
+    html += '<label><input type="radio" name="cafe" value="Extra caf\u00e9"> Extra</label>';
+    html += '</div></div>';
+  }
+
+  if (tieneAzucar) {
+    html += '<div class="opcion-grupo"><label>Cantidad de az\u00facar</label>';
+    html += '<div class="radio-group">';
+    html += '<label><input type="radio" name="azucar" value="Sin az\u00facar"> Sin az\u00facar</label>';
+    html += '<label><input type="radio" name="azucar" value="Poca"> Poca</label>';
+    html += '<label><input type="radio" name="azucar" value="Normal" checked> Normal</label>';
+    html += '<label><input type="radio" name="azucar" value="Extra"> Extra</label>';
+    html += '</div></div>';
+  }
+
+  if (tieneHielo) {
+    html += '<div class="opcion-grupo"><label>Cantidad de hielo</label>';
+    html += '<div class="radio-group">';
+    html += '<label><input type="radio" name="hielo" value="Sin hielo"> Sin hielo</label>';
+    html += '<label><input type="radio" name="hielo" value="Poco"> Poco</label>';
+    html += '<label><input type="radio" name="hielo" value="Normal" checked> Normal</label>';
+    html += '<label><input type="radio" name="hielo" value="Extra hielo"> Extra</label>';
+    html += '</div></div>';
+  }
+
+  document.getElementById('modalContenido').innerHTML = html;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function cerrarModal(e) {
+  if (e.target.id === 'modalOverlay') { cancelarModal(); }
+}
+
+function cancelarModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+  itemActual = null;
+}
+
+function confirmarItem() {
+  if (!itemActual) { return; }
+
+  var saborEl  = document.getElementById('opt_sabor');
+  var lecheEl  = document.getElementById('opt_leche');
+  var azucarEl = document.querySelector('input[name="azucar"]:checked');
+  var hieloEl  = document.querySelector('input[name="hielo"]:checked');
+  var cafeEl   = document.querySelector('input[name="cafe"]:checked');
+
+  var sabor  = saborEl  ? saborEl.value  : '';
+  var leche  = lecheEl  ? lecheEl.value  : '';
+  var azucar = azucarEl ? azucarEl.value : '';
+  var hielo  = hieloEl  ? hieloEl.value  : '';
+  var cafe   = cafeEl   ? cafeEl.value   : '';
+
+  if (saborEl && !sabor) {
+    alert('Por favor selecciona un sabor.');
+    return;
+  }
+
+  var item = {
+    nombre: itemActual.nombre,
+    precio: itemActual.precio,
+    sabor:  sabor,
+    leche:  leche,
+    azucar: azucar,
+    hielo:  hielo,
+    cafe:   cafe
+  };
+
+  carritoItems.push(item);
+  carritoTotal += item.precio;
+
+  document.getElementById('emptyMsg').style.display = 'none';
+
+  var li   = document.createElement('li');
+  li.className = 'pedido-item';
+
+  var subs = [];
+  if (sabor)  { subs.push('Sabor: ' + sabor); }
+  if (leche)  { subs.push('Leche: ' + leche); }
+  if (cafe)   { subs.push(cafe); }
+  if (azucar) { subs.push(azucar); }
+  if (hielo)  { subs.push(hielo); }
+
+  li.innerHTML =
+    '<div>' +
+      '<span class="item-nombre">' + item.nombre + '</span>' +
+      '<span class="item-detalle">' + subs.join(' \u00b7 ') + '</span>' +
+    '</div>' +
+    '<div class="item-precio-del">' +
+      '<span>$' + item.precio + '</span>' +
+      '<button class="btn-del" onclick="eliminarItem(this)">&#x2715;</button>' +
+    '</div>';
+
+  document.getElementById('listaPedido').appendChild(li);
+  document.getElementById('total').textContent = carritoTotal;
+  document.getElementById('btnPedir').disabled = false;
+  document.getElementById('articulos_json').value = JSON.stringify(carritoItems);
+
+  cancelarModal();
+}
+
+function eliminarItem(btn) {
+  var li    = btn.closest('li');
+  var items = document.querySelectorAll('.pedido-item');
+  var idx   = Array.prototype.indexOf.call(items, li);
+
+  carritoTotal -= carritoItems[idx].precio;
+  carritoItems.splice(idx, 1);
+  li.remove();
+
+  document.getElementById('total').textContent = carritoTotal;
+  document.getElementById('articulos_json').value = JSON.stringify(carritoItems);
+
+  if (carritoItems.length === 0) {
+    document.getElementById('emptyMsg').style.display = '';
+    document.getElementById('btnPedir').disabled = true;
+  }
+}
+
+function enviarPedido() {
+  if (carritoItems.length === 0) {
+    alert('No has agregado ning\u00fan producto.');
+    return false;
+  }
+  document.getElementById('articulos_json').value = JSON.stringify(carritoItems);
+  return true;
+}
+</script>
+</body>
+</html>

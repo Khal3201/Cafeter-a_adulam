@@ -1,0 +1,19 @@
+{
+  "name": "Cafetería Adulam",
+  "short_name": "Café Adulam",
+  "description": "Pide tu bebida desde tu asiento",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f1ee",
+  "theme_color": "#6b3e26",
+  "lang": "es",
+  "icons" :     {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+  "screenshots": [],
+  "categories": ["food", "lifestyle"]
+}

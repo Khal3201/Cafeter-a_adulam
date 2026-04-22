@@ -1,0 +1,2406 @@
+/* ─── BASE ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cafe: #6f4e37;
+  --cafe-dark: #5a3e2b;
+  --cafe-light: #f4f1ee;
+  --cafe-mid: #d4b896;
+  --cream: #fdf8f3;
+  --text: #3a2a1e;
+  --text-muted: #7a6355;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(111,78,55,0.1);
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(--cafe-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px 0 40px;
+  color: var(--text);
+}
+
+/* ─── CONTENEDOR PRINCIPAL ──────────────────────────────────── */
+.container {
+  background: var(--cream);
+  padding: 28px 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 92%;
+  max-width: 420px;
+}
+
+/* ─── LOGO AREA ─────────────────────────────────────────────── */
+.logo-area {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.logo-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+.logo-area h1, .logo-area h2 {
+  color: var(--cafe);
+  font-size: 22px;
+}
+.subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ─── FORMULARIOS ───────────────────────────────────────────── */
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  margin-top: 12px;
+}
+input[type="text"], input[type="number"], select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--cafe-mid);
+  background: white;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--cafe);
+}
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+button[type="submit"], button.btn-confirmar {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--cafe);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background 0.2s;
+}
+button[type="submit"]:hover, button.btn-confirmar:hover {
+  background-color: var(--cafe-dark);
+}
+button[type="submit"]:disabled {
+  background: var(--cafe-mid);
+  cursor: not-allowed;
+}
+a {
+  display: block;
+  margin-top: 14px;
+  text-align: center;
+  color: var(--cafe);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* ─── ALERTAS ───────────────────────────────────────────────── */
+.alert {
+  background: #fff0f0;
+  color: #c0392b;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  font-size: 14px;
+  border-left: 3px solid #c0392b;
+}
+.alert.alert-success {
+  background: #f0fff4;
+  color: #27ae60;
+  border-left-color: #27ae60;
+}
+
+/* ─── SECTION TITLE ─────────────────────────────────────────── */
+.section-title {
+  font-size: 15px;
+  color: var(--cafe);
+  margin: 20px 0 12px;
+  border-bottom: 1.5px solid var(--cafe-mid);
+  padding-bottom: 6px;
+}
+
+/* ─── MENU ITEMS ────────────────────────────────────────────── */
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: white;
+  border-radius: var(--radius-sm);
+  border: 1px solid #ede8e4;
+  margin-bottom: 10px;
+}
+.menu-info { flex: 1; }
+.menu-info strong { display: block; font-size: 15px; color: var(--text); }
+.categoria-tag {
+  display: inline-block;
+  font-size: 11px;
+  background: var(--cafe-light);
+  color: var(--cafe);
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin: 3px 0;
+}
+.precio {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--cafe);
+  margin-top: 2px;
+}
+.btn-agregar {
+  width: auto;
+  padding: 8px 16px;
+  background: var(--cafe);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-top: 0;
+}
+.btn-agregar:hover { background: var(--cafe-dark); }
+
+/* ─── PEDIDO SECTION ────────────────────────────────────────── */
+.pedido-section { margin-top: 10px; }
+.lista-pedido { list-style: none; }
+.empty-cart {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 12px;
+}
+.pedido-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: white;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  font-size: 14px;
+  border: 1px solid #ede8e4;
+}
+.item-nombre { display: block; font-weight: bold; color: var(--text); }
+.item-detalle { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.item-precio-del { display: flex; align-items: center; gap: 8px; color: var(--cafe); font-weight: bold; }
+.btn-del {
+  width: auto;
+  padding: 2px 8px;
+  background: transparent;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 0;
+}
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 4px;
+  border-top: 1.5px solid var(--cafe-mid);
+  margin-top: 8px;
+  font-weight: bold;
+}
+.total-monto { color: var(--cafe); font-size: 18px; }
+
+/* ─── MODAL ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58,42,30,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal-box {
+  background: var(--cream);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-box h3 {
+  color: var(--cafe);
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+.opcion-grupo { margin-bottom: 16px; }
+.opcion-grupo label { margin-bottom: 6px; }
+.radio-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1px solid var(--cafe-mid);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  margin: 0;
+}
+.radio-group input[type="radio"] { accent-color: var(--cafe); }
+.sin-stock {
+  color: #c0392b;
+  background: #fff0f0;
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 14px;
+}
+.modal-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+.modal-btns button {
+  margin-top: 0;
+  padding: 10px;
+  font-size: 14px;
+}
+.modal-btns button:first-child {
+  background: transparent;
+  color: var(--cafe);
+  border: 1.5px solid var(--cafe);
+}
+.modal-btns button:first-child:hover { background: var(--cafe-light); }
+
+/* ─── SUCCESS PAGE ──────────────────────────────────────────── */
+.success-msg {
+  text-align: center;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 10px 0 20px;
+}
+
+/* ─── BOTÓN PWA ─────────────────────────────────────────────── */
+.btn-instalar {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  background: transparent;
+  color: var(--cafe);
+  border: 2px dashed var(--cafe-mid);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-instalar:hover {
+  background: var(--cafe-light);
+  border-color: var(--cafe);
+}
+.instalar-icono { font-size: 18px; }
+.pwa-ok {
+  text-align: center;
+  color: #27ae60;
+  font-size: 14px;
+  margin-top: 12px;
+  padding: 8px;
+  background: #f0fff4;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── GUIA DE ASIENTOS ──────────────────────────────────────── */
+.guia-asientos {
+  margin-top: 28px;
+  width: 95%;
+  max-width: 420px;
+  text-align: center;
+}
+.guia-asientos h3 { color: var(--cafe); margin-bottom: 12px; }
+.escenario {
+  margin: 12px auto 20px;
+  width: 80%;
+  max-width: 280px;
+  height: 40px;
+  border: 3px solid var(--cafe);
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  background: var(--cafe-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  color: var(--cafe);
+  position: relative;
+}
+.escenario::before {
+  content: "";
+  position: absolute;
+  top: -8px; left: 10%;
+  width: 80%; height: 4px;
+  background: var(--cafe);
+  border-radius: 2px;
+}
+.secciones {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  transform: scale(0.62);
+  transform-origin: top center;
+}
+.bloque { display: flex; flex-direction: column; gap: 18px; }
+.seccion {
+  display: grid;
+  grid-template-columns: 18px repeat(4, 22px);
+  gap: 8px;
+  align-items: center;
+}
+.fila { font-weight: bold; color: var(--cafe); }
+.punto-wrapper { position: relative; width: 14px; height: 14px; }
+.punto { width: 14px; height: 14px; background: var(--cafe); border-radius: 50%; }
+.numero {
+  position: absolute;
+  top: -14px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--cafe);
+}
+
+/* ─── ADMIN LAYOUT ──────────────────────────────────────────── */
+.admin-wrap {
+  width: 95%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 0 60px;
+}
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--cafe);
+  color: white;
+  padding: 14px 20px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.admin-header strong { color: white; font-size: 16px; }
+.logo-icon-sm { font-size: 20px; margin-right: 8px; }
+.btn-logout {
+  display: inline;
+  margin: 0;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  text-decoration: none;
+}
+.alert-admin {
+  background: #fff3cd;
+  color: #856404;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  font-size: 14px;
+  border-left: 3px solid #ffc107;
+}
+
+/* ─── TABS ──────────────────────────────────────────────────── */
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.tab-btn {
+  padding: 10px 4px;
+  background: white;
+  border: 1.5px solid var(--cafe-mid);
+  border-radius: var(--radius-sm);
+  color: var(--cafe);
+  font-size: 12px;
+  cursor: pointer;
+  margin: 0;
+  width: 100%;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: var(--cafe);
+  color: white;
+  border-color: var(--cafe);
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.tab-title { font-size: 16px; color: var(--cafe); margin: 16px 0 10px; }
+.tab-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+
+/* ─── ADMIN CARDS ───────────────────────────────────────────── */
+.admin-card {
+  background: var(--cream);
+  border: 1px solid #e5ddd7;
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.admin-card h4 { color: var(--cafe); font-size: 15px; margin-bottom: 12px; }
+.pedido-card {
+
+    
+}
+.pedido-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.badge {
+  font-size: 11px;
+  background: var(--cafe-light);
+  color: var(--cafe);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-weight: bold;
+}
+.badge-on { background: #e8f8f0; color: #1a7a4a; }
+.badge-off { background: #fde8e8; color: #c0392b; }
+.pedido-articulos {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.pedido-detalles {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.pedido-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.pedido-total { color: var(--cafe); font-weight: bold; font-size: 14px; }
+.btn-completar {
+  display: block;
+  text-align: center;
+  background: #27ae60;
+  color: white;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-decoration: none;
+  margin: 0;
+}
+.btn-completar:hover { background: #1e8449; }
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  background: var(--cream);
+  border-radius: var(--radius);
+}
+
+/* ─── PRODUCTO CARD ─────────────────────────────────────────── */
+.producto-card.inactivo { opacity: 0.6; }
+.producto-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.precio-badge {
+  font-weight: bold;
+  color: var(--cafe);
+  font-size: 16px;
+  white-space: nowrap;
+}
+.flags { display: flex; gap: 8px; margin-bottom: 10px; }
+.flag { font-size: 12px; color: var(--text-muted); }
+.edit-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--cafe);
+  padding: 6px 0;
+}
+.edit-form { margin-top: 12px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-group { margin-bottom: 10px; }
+.form-checks { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+  cursor: pointer;
+}
+.check-label input[type="checkbox"] { accent-color: var(--cafe); width: 16px; height: 16px; }
+.edit-btns {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-top: 4px;
+  align-items: end;
+}
+.btn-danger {
+  display: inline-block;
+  padding: 10px 16px;
+  background: transparent;
+  color: #c0392b;
+  border: 1.5px solid #c0392b;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-danger:hover { background: #fde8e8; }
+
+/* ─── OPCIONES ──────────────────────────────────────────────── */
+.opciones-lista { display: flex; flex-direction: column; gap: 8px; }
+.opcion-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: white;
+  border-radius: var(--radius-sm);
+  border: 1px solid #ede8e4;
+}
+.opcion-tipo {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--cafe-light);
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.opcion-valor { flex: 1; font-size: 14px; }
+.opcion-acciones { display: flex; align-items: center; gap: 6px; }
+.btn-sm {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  text-decoration: none;
+  border: 1px solid;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-sm.btn-warning { color: #856404; border-color: #856404; background: #fff8e1; }
+.btn-sm.btn-success { color: #1a7a4a; border-color: #1a7a4a; background: #e8f8f0; }
+.btn-sm.btn-danger { color: #c0392b; border-color: #c0392b; background: #fde8e8; }
+
+/* ─── ARQUEO ────────────────────────────────────────────────── */
+.arqueo-hoy {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.arqueo-stat {
+  background: var(--cream);
+  border: 1px solid #e5ddd7;
+  border-radius: var(--radius);
+  padding: 16px 12px;
+  text-align: center;
+}
+.stat-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.stat-valor { display: block; font-size: 22px; font-weight: bold; color: var(--cafe); }
+.reiniciar-card { border-color: #f5c6cb; background: #fff8f8; }
+.btn-danger-full {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: #c0392b;
+  border: 1.5px solid #c0392b;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.btn-danger-full:hover { background: #fde8e8; }
+.tabla-wrap { overflow-x: auto; }
+.tabla-arqueo {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.tabla-arqueo th, .tabla-arqueo td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5ddd7;
+  text-align: left;
+}
+.tabla-arqueo th { color: var(--cafe); font-size: 13px; background: var(--cafe-light); }
+.nota-cell { color: var(--text-muted); font-size: 12px; max-width: 180px; }
+.row-hoy { background: #fff8f0; }
+.row-hoy td { font-weight: bold; }
+
+
+/* 5 tabs en el panel admin */
+.tabs {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* ─── GUÍA DE ASIENTOS EN ADMIN ──────────────────────────────── */
+.guia-asientos-admin {
+  text-align: center;
+}
+
+/* Contenedor con scroll horizontal — el mapa nunca se deforma */
+.mapa-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+  /* Barra de scroll visible y estilizada */
+  scrollbar-width: thin;
+  scrollbar-color: var(--cafe-mid) var(--cafe-light);
+}
+.mapa-scroll-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+.mapa-scroll-wrap::-webkit-scrollbar-track {
+  background: var(--cafe-light);
+  border-radius: 4px;
+}
+.mapa-scroll-wrap::-webkit-scrollbar-thumb {
+  background: var(--cafe-mid);
+  border-radius: 4px;
+}
+.mapa-scroll-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--cafe);
+}
+
+/* Contenido interior con ancho fijo para que no colapse en móvil */
+.mapa-interior {
+  display: inline-block;
+  min-width: 520px;
+  padding: 4px 8px 8px;
+}
+
+.guia-asientos-admin .escenario {
+  margin: 8px auto 20px;
+  width: 70%;
+  max-width: 340px;
+  height: 40px;
+  border: 3px solid var(--cafe);
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  background: var(--cafe-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  color: var(--cafe);
+  position: relative;
+}
+
+.guia-asientos-admin .escenario::before {
+  content: "";
+  position: absolute;
+  top: -8px; left: 10%;
+  width: 80%; height: 4px;
+  background: var(--cafe);
+  border-radius: 2px;
+}
+
+/* Sin transform — tamaño natural, el scroll se encarga del resto */
+.secciones-admin {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.scroll-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 8px;
+  display: none; /* Solo visible en móvil */
+}
+
+@media (max-width: 560px) {
+  .scroll-hint { display: block; }
+}
+
+.leyenda-asientos {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.punto-leyenda {
+  width: 12px;
+  height: 12px;
+  background: var(--cafe);
+  border-radius: 50%;
+  display: inline-block;
+}
+/* -----------------------------------------------------------------------
+   AGREGAR AL FINAL DE style.css
+   ----------------------------------------------------------------------- */
+
+/* 5 tabs en el panel admin */
+.tabs {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* --- BADGE DE NOTIFICACION EN HEADER ------------------------------------ */
+
+.badge-notif {
+  background: #e74c3c;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  animation: pulsar 1.2s ease-in-out infinite;
+}
+
+@keyframes pulsar {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* --- ESTADOS DE LOS PEDIDOS EN ADMIN ------------------------------------ */
+
+.pedido-card.estado-preparando {
+  border-left: 4px solid #e67e22;
+}
+
+.pedido-card.estado-pendiente {
+  border-left: 4px solid var(--cafe-mid);
+}
+
+.badge-pendiente {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge-preparando {
+  background: #fde8d0;
+  color: #b05a00;
+  font-size: 11px;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-weight: bold;
+}
+
+/* Botones de accion en cada pedido */
+.pedido-acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pedido-acciones a {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-decoration: none;
+  margin: 0;
+}
+
+.btn-preparar {
+  background: #e67e22;
+  color: white;
+}
+
+.btn-preparar:hover {
+  background: #ca6f1e;
+}
+
+.btn-completar {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-completar:hover {
+  background: #1e8449;
+}
+
+/* Cuando solo hay boton de completar (ya esta preparando) ocupa todo el ancho */
+.pedido-acciones a:only-child {
+  grid-column: 1 / -1;
+}
+
+/* --- AVISO EN FORMULARIO EDITAR PRODUCTO --------------------------------- */
+
+.aviso-opciones {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--cafe-light);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-left: 3px solid var(--cafe-mid);
+}
+
+/* --- PAGINA DE ESTADO PARA EL CLIENTE ----------------------------------- */
+
+.estado-card {
+  text-align: center;
+  padding: 28px 20px;
+  border-radius: var(--radius);
+  margin: 16px 0;
+  border: 2px solid var(--cafe-mid);
+  background: white;
+  transition: all 0.4s ease;
+}
+
+.estado-icono {
+  font-size: 48px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.estado-texto {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.estado-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.estado-card.estado-pendiente {
+  border-color: var(--cafe-mid);
+}
+
+.estado-card.estado-preparando {
+  border-color: #e67e22;
+  background: #fffaf5;
+}
+
+.estado-card.estado-entregado {
+  border-color: #27ae60;
+  background: #f0fff4;
+}
+
+/* Resumen del pedido en pagina de estado */
+.resumen-pedido {
+  background: white;
+  border: 1px solid #ede8e4;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.resumen-titulo {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.resumen-items {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.resumen-detalles {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.resumen-total {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--cafe);
+  margin: 0;
+}
+
+/* --- MAPA DE ASIENTOS EN ADMIN ------------------------------------------ */
+
+.guia-asientos-admin {
+  text-align: center;
+}
+
+.mapa-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cafe-mid) var(--cafe-light);
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-track {
+  background: var(--cafe-light);
+  border-radius: 4px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-thumb {
+  background: var(--cafe-mid);
+  border-radius: 4px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--cafe);
+}
+
+.mapa-interior {
+  display: inline-block;
+  min-width: 520px;
+  padding: 4px 8px 8px;
+}
+
+.guia-asientos-admin .escenario {
+  margin: 8px auto 20px;
+  width: 70%;
+  max-width: 340px;
+  height: 40px;
+  border: 3px solid var(--cafe);
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  background: var(--cafe-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  color: var(--cafe);
+  position: relative;
+}
+
+.guia-asientos-admin .escenario::before {
+  content: "";
+  position: absolute;
+  top: -8px; left: 10%;
+  width: 80%; height: 4px;
+  background: var(--cafe);
+  border-radius: 2px;
+}
+
+.secciones-admin {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.scroll-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 8px;
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .scroll-hint { display: block; }
+}
+
+.leyenda-asientos {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.punto-leyenda {
+  width: 12px;
+  height: 12px;
+  background: var(--cafe);
+  border-radius: 50%;
+  display: inline-block;
+}
+/* -----------------------------------------------------------------------
+   AGREGAR AL FINAL DE style.css
+   ----------------------------------------------------------------------- */
+
+/* 5 tabs en el panel admin */
+.tabs {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* --- BADGE DE NOTIFICACION EN HEADER ------------------------------------ */
+
+.badge-notif {
+  background: #e74c3c;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  animation: pulsar 1.2s ease-in-out infinite;
+}
+
+@keyframes pulsar {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* --- ESTADOS DE LOS PEDIDOS EN ADMIN ------------------------------------ */
+
+.pedido-card.estado-preparando {
+  border-left: 4px solid #e67e22;
+}
+
+.pedido-card.estado-pendiente {
+  border-left: 4px solid var(--cafe-mid);
+}
+
+.badge-pendiente {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge-preparando {
+  background: #fde8d0;
+  color: #b05a00;
+  font-size: 11px;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-weight: bold;
+}
+
+/* Botones de accion en cada pedido */
+.pedido-acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pedido-acciones a {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-decoration: none;
+  margin: 0;
+}
+
+.btn-preparar {
+  background: #e67e22;
+  color: white;
+}
+
+.btn-preparar:hover {
+  background: #ca6f1e;
+}
+
+.btn-completar {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-completar:hover {
+  background: #1e8449;
+}
+
+/* Cuando solo hay boton de completar (ya esta preparando) ocupa todo el ancho */
+.pedido-acciones a:only-child {
+  grid-column: 1 / -1;
+}
+
+/* --- AVISO EN FORMULARIO EDITAR PRODUCTO --------------------------------- */
+
+.aviso-opciones {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--cafe-light);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-left: 3px solid var(--cafe-mid);
+}
+
+/* --- PAGINA DE ESTADO PARA EL CLIENTE ----------------------------------- */
+
+.estado-card {
+  text-align: center;
+  padding: 28px 20px;
+  border-radius: var(--radius);
+  margin: 16px 0;
+  border: 2px solid var(--cafe-mid);
+  background: white;
+  transition: all 0.4s ease;
+}
+
+.estado-icono {
+  font-size: 48px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.estado-texto {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.estado-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.estado-card.estado-pendiente {
+  border-color: var(--cafe-mid);
+}
+
+.estado-card.estado-preparando {
+  border-color: #e67e22;
+  background: #fffaf5;
+}
+
+.estado-card.estado-entregado {
+  border-color: #27ae60;
+  background: #f0fff4;
+}
+
+/* Resumen del pedido en pagina de estado */
+.resumen-pedido {
+  background: white;
+  border: 1px solid #ede8e4;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.resumen-titulo {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.resumen-items {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.resumen-detalles {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.resumen-total {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--cafe);
+  margin: 0;
+}
+
+/* --- MAPA DE ASIENTOS EN ADMIN ------------------------------------------ */
+
+.guia-asientos-admin {
+  text-align: center;
+}
+
+.mapa-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cafe-mid) var(--cafe-light);
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-track {
+  background: var(--cafe-light);
+  border-radius: 4px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-thumb {
+  background: var(--cafe-mid);
+  border-radius: 4px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--cafe);
+}
+
+.mapa-interior {
+  display: inline-block;
+  min-width: 520px;
+  padding: 4px 8px 8px;
+}
+
+.guia-asientos-admin .escenario {
+  margin: 8px auto 20px;
+  width: 70%;
+  max-width: 340px;
+  height: 40px;
+  border: 3px solid var(--cafe);
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  background: var(--cafe-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  color: var(--cafe);
+  position: relative;
+}
+
+.guia-asientos-admin .escenario::before {
+  content: "";
+  position: absolute;
+  top: -8px; left: 10%;
+  width: 80%; height: 4px;
+  background: var(--cafe);
+  border-radius: 2px;
+}
+
+.secciones-admin {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.scroll-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 8px;
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .scroll-hint { display: block; }
+}
+
+.leyenda-asientos {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.punto-leyenda {
+  width: 12px;
+  height: 12px;
+  background: var(--cafe);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* --- SECCION CENTRAL DEL MAPA ------------------------------------------- */
+
+.bloque-centro {
+  border-left:  2px dashed var(--cafe-mid);
+  border-right: 2px dashed var(--cafe-mid);
+  padding: 0 6px;
+}
+
+/* --- FILTRO DE EVENTOS EN ARQUEO ---------------------------------------- */
+
+.arqueo-filtro-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 6px;
+}
+
+.arqueo-filtro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filtro-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.btn-toggle-eventos {
+  width: auto;
+  margin: 0;
+  padding: 5px 14px;
+  font-size: 13px;
+  border-radius: 20px;
+  border: 1.5px solid var(--cafe-mid);
+  background: white;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-eventos.activo {
+  background: var(--cafe);
+  color: white;
+  border-color: var(--cafe);
+}
+
+.badge-evento {
+  font-size: 10px;
+  background: #fff3cd;
+  color: #856404;
+  border-radius: 20px;
+  padding: 2px 7px;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+/* --- SCROLL HORIZONTAL EN GUIA DE ASIENTOS DEL LOGIN -------------------- */
+
+/* El min-width del admin sube a 650px por la 5ta seccion */
+.mapa-interior {
+  min-width: 650px;
+}
+
+.scroll-hint-login {
+  display: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* En movil: quitar el scale y activar scroll horizontal */
+@media (max-width: 520px) {
+  .guia-scroll-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cafe-mid) var(--cafe-light);
+  }
+
+  .guia-scroll-wrap::-webkit-scrollbar       { height: 6px; }
+  .guia-scroll-wrap::-webkit-scrollbar-track { background: var(--cafe-light); border-radius: 3px; }
+  .guia-scroll-wrap::-webkit-scrollbar-thumb { background: var(--cafe-mid); border-radius: 3px; }
+
+  .guia-interior {
+    min-width: 680px;
+    padding: 0 8px 4px;
+    display: inline-block;
+  }
+
+  /* Sin scale en movil: el scroll se encarga del espacio */
+  .secciones {
+    transform: none;
+    gap: 8px;
+  }
+
+  .scroll-hint-login {
+    display: block;
+  }
+}
+/* -----------------------------------------------------------------------
+   AGREGAR AL FINAL DE style.css
+   ----------------------------------------------------------------------- */
+
+/* 5 tabs en el panel admin */
+.tabs {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* --- BADGE DE NOTIFICACION EN HEADER ------------------------------------ */
+
+.badge-notif {
+  background: #e74c3c;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  animation: pulsar 1.2s ease-in-out infinite;
+}
+
+@keyframes pulsar {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* --- ESTADOS DE LOS PEDIDOS EN ADMIN ------------------------------------ */
+
+.pedido-card.estado-preparando {
+  border-left: 4px solid #e67e22;
+}
+
+.pedido-card.estado-pendiente {
+  border-left: 4px solid var(--cafe-mid);
+}
+
+.badge-pendiente {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge-preparando {
+  background: #fde8d0;
+  color: #b05a00;
+  font-size: 11px;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-weight: bold;
+}
+
+/* Botones de accion en cada pedido */
+.pedido-acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pedido-acciones a {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-decoration: none;
+  margin: 0;
+}
+
+.btn-preparar {
+  background: #e67e22;
+  color: white;
+}
+
+.btn-preparar:hover {
+  background: #ca6f1e;
+}
+
+.btn-completar {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-completar:hover {
+  background: #1e8449;
+}
+
+/* Cuando solo hay boton de completar (ya esta preparando) ocupa todo el ancho */
+.pedido-acciones a:only-child {
+  grid-column: 1 / -1;
+}
+
+/* --- AVISO EN FORMULARIO EDITAR PRODUCTO --------------------------------- */
+
+.aviso-opciones {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--cafe-light);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-left: 3px solid var(--cafe-mid);
+}
+
+/* --- PAGINA DE ESTADO PARA EL CLIENTE ----------------------------------- */
+
+.estado-card {
+  text-align: center;
+  padding: 28px 20px;
+  border-radius: var(--radius);
+  margin: 16px 0;
+  border: 2px solid var(--cafe-mid);
+  background: white;
+  transition: all 0.4s ease;
+}
+
+.estado-icono {
+  font-size: 48px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.estado-texto {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.estado-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.estado-card.estado-pendiente {
+  border-color: var(--cafe-mid);
+}
+
+.estado-card.estado-preparando {
+  border-color: #e67e22;
+  background: #fffaf5;
+}
+
+.estado-card.estado-entregado {
+  border-color: #27ae60;
+  background: #f0fff4;
+}
+
+/* Resumen del pedido en pagina de estado */
+.resumen-pedido {
+  background: white;
+  border: 1px solid #ede8e4;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.resumen-titulo {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.resumen-items {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.resumen-detalles {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.resumen-total {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--cafe);
+  margin: 0;
+}
+
+/* --- MAPA DE ASIENTOS EN ADMIN ------------------------------------------ */
+
+.guia-asientos-admin {
+  text-align: center;
+}
+
+.mapa-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cafe-mid) var(--cafe-light);
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-track {
+  background: var(--cafe-light);
+  border-radius: 4px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-thumb {
+  background: var(--cafe-mid);
+  border-radius: 4px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--cafe);
+}
+
+.mapa-interior {
+  display: inline-block;
+  min-width: 520px;
+  padding: 4px 8px 8px;
+}
+
+.guia-asientos-admin .escenario {
+  margin: 8px auto 20px;
+  width: 70%;
+  max-width: 340px;
+  height: 40px;
+  border: 3px solid var(--cafe);
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  background: var(--cafe-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  color: var(--cafe);
+  position: relative;
+}
+
+.guia-asientos-admin .escenario::before {
+  content: "";
+  position: absolute;
+  top: -8px; left: 10%;
+  width: 80%; height: 4px;
+  background: var(--cafe);
+  border-radius: 2px;
+}
+
+.secciones-admin {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.scroll-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 8px;
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .scroll-hint { display: block; }
+}
+
+.leyenda-asientos {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.punto-leyenda {
+  width: 12px;
+  height: 12px;
+  background: var(--cafe);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* --- VERSICULO BIBLICO EN PEDIDO EXITOSO -------------------------------- */
+
+.versiculo {
+  text-align: center;
+  margin: 20px 0 4px;
+  padding: 16px;
+  border-top: 1px solid var(--cafe-mid);
+}
+
+.versiculo-texto {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.versiculo-ref {
+  font-size: 12px;
+  color: var(--cafe);
+  font-weight: bold;
+}
+
+/* --- BOTON LIMPIAR HISTORIAL -------------------------------------------- */
+
+.btn-limpiar-historial {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--cafe);
+  border: 1.5px solid var(--cafe);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+
+.btn-limpiar-historial:hover {
+  background: var(--cafe-light);
+}
+
+.bloque-centro {
+  border-left:  2px dashed var(--cafe-mid);
+  border-right: 2px dashed var(--cafe-mid);
+  padding: 0 6px;
+}
+
+/* --- FILTRO DE EVENTOS EN ARQUEO ---------------------------------------- */
+
+.arqueo-filtro-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 6px;
+}
+
+.arqueo-filtro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filtro-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.btn-toggle-eventos {
+  width: auto;
+  margin: 0;
+  padding: 5px 14px;
+  font-size: 13px;
+  border-radius: 20px;
+  border: 1.5px solid var(--cafe-mid);
+  background: white;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-eventos.activo {
+  background: var(--cafe);
+  color: white;
+  border-color: var(--cafe);
+}
+
+.badge-evento {
+  font-size: 10px;
+  background: #fff3cd;
+  color: #856404;
+  border-radius: 20px;
+  padding: 2px 7px;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+/* --- SCROLL HORIZONTAL EN GUIA DE ASIENTOS DEL LOGIN -------------------- */
+
+/* El min-width del admin sube a 650px por la 5ta seccion */
+.mapa-interior {
+  min-width: 650px;
+}
+
+.scroll-hint-login {
+  display: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* En movil: quitar el scale y activar scroll horizontal */
+@media (max-width: 520px) {
+  .guia-scroll-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cafe-mid) var(--cafe-light);
+  }
+
+  .guia-scroll-wrap::-webkit-scrollbar       { height: 6px; }
+  .guia-scroll-wrap::-webkit-scrollbar-track { background: var(--cafe-light); border-radius: 3px; }
+  .guia-scroll-wrap::-webkit-scrollbar-thumb { background: var(--cafe-mid); border-radius: 3px; }
+
+  .guia-interior {
+    min-width: 680px;
+    padding: 0 8px 4px;
+    display: inline-block;
+  }
+
+  /* Sin scale en movil: el scroll se encarga del espacio */
+  .secciones {
+    transform: none;
+    gap: 8px;
+  }
+
+  .scroll-hint-login {
+    display: block;
+  }
+}
+/* -----------------------------------------------------------------------
+   AGREGAR AL FINAL DE style.css
+   ----------------------------------------------------------------------- */
+
+/* 6 tabs en el panel admin */
+.tabs {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+/* --- ESTADO DE LA APP (tab config) -------------------------------------- */
+
+.estado-app-card {
+  border-left: 4px solid #27ae60;
+}
+
+.estado-app-card.app-inactiva {
+  border-left-color: #c0392b;
+  background: #fff8f8;
+}
+
+.estado-app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.estado-app-badge {
+  font-size: 13px;
+  font-weight: bold;
+  border-radius: 20px;
+  padding: 5px 14px;
+  white-space: nowrap;
+}
+
+.mensaje-inactiva-preview {
+  font-size: 14px;
+  color: var(--text);
+  background: var(--cafe-light);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  line-height: 1.6;
+  border-left: 3px solid var(--cafe-mid);
+}
+
+/* --- BADGE DE NOTIFICACION EN HEADER ------------------------------------ */
+
+.badge-notif {
+  background: #e74c3c;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  animation: pulsar 1.2s ease-in-out infinite;
+}
+
+@keyframes pulsar {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* --- ESTADOS DE LOS PEDIDOS EN ADMIN ------------------------------------ */
+
+.pedido-card.estado-preparando {
+  border-left: 4px solid #e67e22;
+}
+
+.pedido-card.estado-pendiente {
+  border-left: 4px solid var(--cafe-mid);
+}
+
+.badge-pendiente {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge-preparando {
+  background: #fde8d0;
+  color: #b05a00;
+  font-size: 11px;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-weight: bold;
+}
+
+/* Botones de accion en cada pedido */
+.pedido-acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pedido-acciones a {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  text-decoration: none;
+  margin: 0;
+}
+
+.btn-preparar {
+  background: #e67e22;
+  color: white;
+}
+
+.btn-preparar:hover {
+  background: #ca6f1e;
+}
+
+.btn-completar {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-completar:hover {
+  background: #1e8449;
+}
+
+/* Cuando solo hay boton de completar (ya esta preparando) ocupa todo el ancho */
+.pedido-acciones a:only-child {
+  grid-column: 1 / -1;
+}
+
+/* --- AVISO EN FORMULARIO EDITAR PRODUCTO --------------------------------- */
+
+.aviso-opciones {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--cafe-light);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-left: 3px solid var(--cafe-mid);
+}
+
+/* --- PAGINA DE ESTADO PARA EL CLIENTE ----------------------------------- */
+
+.estado-card {
+  text-align: center;
+  padding: 28px 20px;
+  border-radius: var(--radius);
+  margin: 16px 0;
+  border: 2px solid var(--cafe-mid);
+  background: white;
+  transition: all 0.4s ease;
+}
+
+.estado-icono {
+  font-size: 48px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.estado-texto {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.estado-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.estado-card.estado-pendiente {
+  border-color: var(--cafe-mid);
+}
+
+.estado-card.estado-preparando {
+  border-color: #e67e22;
+  background: #fffaf5;
+}
+
+.estado-card.estado-entregado {
+  border-color: #27ae60;
+  background: #f0fff4;
+}
+
+/* Resumen del pedido en pagina de estado */
+.resumen-pedido {
+  background: white;
+  border: 1px solid #ede8e4;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 4px;
+}
+
+.resumen-titulo {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.resumen-items {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.resumen-detalles {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.resumen-total {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--cafe);
+  margin: 0;
+}
+
+/* --- MAPA DE ASIENTOS EN ADMIN ------------------------------------------ */
+
+.guia-asientos-admin {
+  text-align: center;
+}
+
+.mapa-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cafe-mid) var(--cafe-light);
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-track {
+  background: var(--cafe-light);
+  border-radius: 4px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-thumb {
+  background: var(--cafe-mid);
+  border-radius: 4px;
+}
+
+.mapa-scroll-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--cafe);
+}
+
+.mapa-interior {
+  display: inline-block;
+  min-width: 520px;
+  padding: 4px 8px 8px;
+}
+
+.guia-asientos-admin .escenario {
+  margin: 8px auto 20px;
+  width: 70%;
+  max-width: 340px;
+  height: 40px;
+  border: 3px solid var(--cafe);
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  background: var(--cafe-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 13px;
+  color: var(--cafe);
+  position: relative;
+}
+
+.guia-asientos-admin .escenario::before {
+  content: "";
+  position: absolute;
+  top: -8px; left: 10%;
+  width: 80%; height: 4px;
+  background: var(--cafe);
+  border-radius: 2px;
+}
+
+.secciones-admin {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.scroll-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 8px;
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .scroll-hint { display: block; }
+}
+
+.leyenda-asientos {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.punto-leyenda {
+  width: 12px;
+  height: 12px;
+  background: var(--cafe);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* --- APP INACTIVA (login bloqueado) ------------------------------------- */
+
+.app-inactiva-msg {
+  text-align: center;
+  padding: 24px 16px;
+  background: var(--cafe-light);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--cafe-mid);
+  margin-top: 8px;
+}
+
+.app-inactiva-icono {
+  font-size: 40px;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.app-inactiva-titulo {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--cafe);
+  margin-bottom: 8px;
+}
+
+.app-inactiva-texto {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.versiculo {
+  text-align: center;
+  margin: 20px 0 4px;
+  padding: 16px;
+  border-top: 1px solid var(--cafe-mid);
+}
+
+.versiculo-texto {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.versiculo-ref {
+  font-size: 12px;
+  color: var(--cafe);
+  font-weight: bold;
+}
+
+/* --- BOTON LIMPIAR HISTORIAL -------------------------------------------- */
+
+.btn-limpiar-historial {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--cafe);
+  border: 1.5px solid var(--cafe);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+
+.btn-limpiar-historial:hover {
+  background: var(--cafe-light);
+}
+
+.bloque-centro {
+  border-left:  2px dashed var(--cafe-mid);
+  border-right: 2px dashed var(--cafe-mid);
+  padding: 0 6px;
+}
+
+/* --- FILTRO DE EVENTOS EN ARQUEO ---------------------------------------- */
+
+.arqueo-filtro-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 6px;
+}
+
+.arqueo-filtro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filtro-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.btn-toggle-eventos {
+  width: auto;
+  margin: 0;
+  padding: 5px 14px;
+  font-size: 13px;
+  border-radius: 20px;
+  border: 1.5px solid var(--cafe-mid);
+  background: white;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-eventos.activo {
+  background: var(--cafe);
+  color: white;
+  border-color: var(--cafe);
+}
+
+.badge-evento {
+  font-size: 10px;
+  background: #fff3cd;
+  color: #856404;
+  border-radius: 20px;
+  padding: 2px 7px;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+/* --- SCROLL HORIZONTAL EN GUIA DE ASIENTOS DEL LOGIN -------------------- */
+
+/* El min-width del admin sube a 650px por la 5ta seccion */
+.mapa-interior {
+  min-width: 650px;
+}
+
+.scroll-hint-login {
+  display: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* En movil: quitar el scale y activar scroll horizontal */
+@media (max-width: 520px) {
+  .guia-scroll-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cafe-mid) var(--cafe-light);
+  }
+
+  .guia-scroll-wrap::-webkit-scrollbar       { height: 6px; }
+  .guia-scroll-wrap::-webkit-scrollbar-track { background: var(--cafe-light); border-radius: 3px; }
+  .guia-scroll-wrap::-webkit-scrollbar-thumb { background: var(--cafe-mid); border-radius: 3px; }
+
+  .guia-interior {
+    min-width: 680px;
+    padding: 0 8px 4px;
+    display: inline-block;
+  }
+
+  /* Sin scale en movil: el scroll se encarga del espacio */
+  .secciones {
+    transform: none;
+    gap: 8px;
+  }
+
+  .scroll-hint-login {
+    display: block;
+  }
+}
