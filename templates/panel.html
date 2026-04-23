@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#6b3e26">
+  <meta name="theme-color" content="#4e3526">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,41 +16,48 @@
 <script id="datos-opciones" type="application/json">{{ opciones|tojson }}</script>
 
 <div class="container">
+
+  <!-- HEADER -->
   <div class="logo-area">
-    <div class="logo-icon">☕</div>
-    <h2>Hola, {{ nombre|capitalize }}!</h2>
+    <span class="logo-icon">☕</span>
+    <h2>Hola, {{ nombre|capitalize }}</h2>
     <p class="subtitle">Asiento <strong>{{ asiento|upper }}</strong></p>
   </div>
 
+  <!-- MENÚ -->
   <h3 class="section-title">Nuestro Menú</h3>
 
-  {% for producto in productos %}
-  <div class="menu-item">
-    <div class="menu-info">
-      <strong>{{ producto.nombre }}</strong>
-      <span class="categoria-tag">{{ producto.categoria }}</span>
-      <p class="precio">${{ "%.0f"|format(producto.precio) }}</p>
+  {% set categorias = productos | map(attribute='categoria') | unique | list %}
+  {% for cat in categorias %}
+    <p class="cat-label">{{ cat }}</p>
+    {% for producto in productos if producto.categoria == cat %}
+    <div class="menu-item">
+      <div class="menu-info">
+        <strong>{{ producto.nombre }}</strong>
+        <p class="precio">${{ "%.0f"|format(producto.precio) }}</p>
+      </div>
+      <button
+        class="btn-agregar"
+        data-id="{{ producto.id }}"
+        data-nombre="{{ producto.nombre }}"
+        data-precio="{{ producto.precio }}"
+        data-sabores="{{ producto.tiene_sabores }}"
+        data-leche="{{ producto.tiene_leche }}"
+        data-hielo="{{ producto.tiene_hielo }}"
+        data-azucar="{{ producto.tiene_azucar }}"
+        data-cafe="{{ producto.tiene_cafe }}"
+        onclick="abrirOpciones(this)">
+        + Agregar
+      </button>
     </div>
-    <button
-      class="btn-agregar"
-      data-id="{{ producto.id }}"
-      data-nombre="{{ producto.nombre }}"
-      data-precio="{{ producto.precio }}"
-      data-sabores="{{ producto.tiene_sabores }}"
-      data-leche="{{ producto.tiene_leche }}"
-      data-hielo="{{ producto.tiene_hielo }}"
-      data-azucar="{{ producto.tiene_azucar }}"
-      data-cafe="{{ producto.tiene_cafe }}"
-      onclick="abrirOpciones(this)">
-      + Agregar
-    </button>
-  </div>
+    {% endfor %}
   {% endfor %}
 
+  <!-- PEDIDO -->
   <div class="pedido-section">
     <h3 class="section-title">Tu pedido</h3>
     <ul id="listaPedido" class="lista-pedido">
-      <li class="empty-cart" id="emptyMsg">No has agregado nada aún</li>
+      <li class="empty-cart" id="emptyMsg">No has agregado nada aún ☕</li>
     </ul>
     <div class="total-row">
       <span>Total</span>
@@ -77,6 +84,19 @@
     </div>
   </div>
 </div>
+
+<style>
+/* Panel-specific overrides */
+.cat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin: 18px 0 8px 2px;
+}
+.cat-label:first-of-type { margin-top: 4px; }
+</style>
 
 <script>
 var opcionesData = JSON.parse(document.getElementById('datos-opciones').textContent);

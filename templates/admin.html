@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#6b3e26">
+  <meta name="theme-color" content="#4e3526">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,11 +16,13 @@
 
   <!-- ENCABEZADO -->
   <div class="admin-header">
-    <div>
-      <span class="logo-icon-sm"></span>
-      <strong>Panel de Administración</strong>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px">☕</span>
+      <div>
+        <strong>Panel de Administración</strong>
+        <p style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:1px;font-weight:400">Cafetería Adulam</p>
+      </div>
     </div>
-    <!-- Badge de pedidos pendientes, se actualiza via JS -->
     <div style="display:flex;align-items:center;gap:12px">
       <span id="badge-pedidos" class="badge-notif" style="display:none"></span>
       <a href="/logout" class="btn-logout">Salir</a>
@@ -41,9 +43,15 @@
     <button class="tab-btn" onclick="showTab('config', this)">Config</button>
   </div>
 
-  <!-- TAB: PEDIDOS -->
+  <!-- ════════════════════════════════════════════════════════
+       TAB: PEDIDOS
+  ════════════════════════════════════════════════════════ -->
   <div id="tab-pedidos" class="tab-content active" data-total="{{ pedidos|length }}">
-    <h3 class="tab-title">Pedidos activos ({{ pedidos|length }})</h3>
+    <h3 class="tab-title">Pedidos activos
+      <span style="font-size:14px;font-family:'DM Sans',sans-serif;font-weight:400;color:var(--text-muted)">
+        ({{ pedidos|length }})
+      </span>
+    </h3>
     <p class="tab-subtitle">Se actualiza automáticamente cada 5 segundos.</p>
 
     {% if pedidos %}
@@ -70,20 +78,23 @@
         </div>
         <div class="pedido-acciones">
           {% if pedido["estado"] == "pendiente" %}
-            <a href="/preparar/{{ pedido['id'] }}" class="btn-preparar">Preparando</a>
+            <a href="/preparar/{{ pedido['id'] }}" class="btn-preparar">En preparación</a>
           {% endif %}
-          <a href="{{ url_for('completar', id=pedido['id']) }}" class="btn-completar">Completar</a>
+          <a href="{{ url_for('completar', id=pedido['id']) }}" class="btn-completar">✓ Completar</a>
         </div>
       </div>
       {% endfor %}
     {% else %}
       <div class="empty-state">
+        <p style="font-size:32px;margin-bottom:12px">☕</p>
         <p>No hay pedidos activos</p>
       </div>
     {% endif %}
   </div>
 
-  <!-- TAB: PRODUCTOS -->
+  <!-- ════════════════════════════════════════════════════════
+       TAB: PRODUCTOS
+  ════════════════════════════════════════════════════════ -->
   <div id="tab-productos" class="tab-content">
     <h3 class="tab-title">Gestión de Productos</h3>
 
@@ -121,14 +132,14 @@
                    onchange="toggleField('new_inputLeche', this.checked)">
             Tiene opciones de leche
           </label>
-          <label class="check-label checks-row">
-            <span class="check-group">
+          <div class="checks-row">
+            <label class="check-group">
               <input type="checkbox" name="tiene_hielo" checked> Pregunta cantidad de hielo
-            </span>
-            <span class="check-group">
+            </label>
+            <label class="check-group">
               <input type="checkbox" name="tiene_azucar" checked> Pregunta cantidad de azúcar
-            </span>
-          </label>
+            </label>
+          </div>
           <label class="check-label">
             <input type="checkbox" name="tiene_cafe"> Pregunta cantidad de café
           </label>
@@ -150,18 +161,20 @@
     <div class="admin-card producto-card {% if not producto.activo %}inactivo{% endif %}">
       <div class="producto-header">
         <div>
-          <strong>{{ producto.nombre }}</strong>
-          <span class="badge">{{ producto.categoria }}</span>
-          {% if not producto.activo %}<span class="badge badge-off">Inactivo</span>{% endif %}
+          <strong style="font-size:15px;font-weight:700;color:var(--text)">{{ producto.nombre }}</strong>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
+            <span class="badge">{{ producto.categoria }}</span>
+            {% if not producto.activo %}<span class="badge badge-off">Inactivo</span>{% endif %}
+          </div>
         </div>
         <span class="precio-badge">${{ "%.0f"|format(producto.precio) }}</span>
       </div>
       <div class="flags">
         {% if producto.tiene_sabores %}<span class="flag">🍓 Sabores</span>{% endif %}
-        {% if producto.tiene_leche %}<span class="flag">🥛 Leche</span>{% endif %}
-        {% if producto.tiene_hielo %}<span class="flag">🧊 Hielo</span>{% endif %}
-        {% if producto.tiene_azucar %}<span class="flag">🍬 Azúcar</span>{% endif %}
-        {% if producto.tiene_cafe %}<span class="flag">☕ Café</span>{% endif %}
+        {% if producto.tiene_leche   %}<span class="flag">🥛 Leche</span>{% endif %}
+        {% if producto.tiene_hielo   %}<span class="flag">🧊 Hielo</span>{% endif %}
+        {% if producto.tiene_azucar  %}<span class="flag">🍬 Azúcar</span>{% endif %}
+        {% if producto.tiene_cafe    %}<span class="flag">☕ Café</span>{% endif %}
       </div>
       <details class="edit-details">
         <summary>Editar producto</summary>
@@ -222,7 +235,9 @@
     {% endfor %}
   </div>
 
-  <!-- TAB: OPCIONES -->
+  <!-- ════════════════════════════════════════════════════════
+       TAB: OPCIONES
+  ════════════════════════════════════════════════════════ -->
   <div id="tab-opciones" class="tab-content">
     <h3 class="tab-title">Gestión de Opciones</h3>
     <p class="tab-subtitle">Activa o desactiva opciones cuando no haya stock.</p>
@@ -286,22 +301,24 @@
     {% endif %}
   </div>
 
-  <!-- TAB: ARQUEO -->
+  <!-- ════════════════════════════════════════════════════════
+       TAB: ARQUEO
+  ════════════════════════════════════════════════════════ -->
   <div id="tab-arqueo" class="tab-content">
     <h3 class="tab-title">Arqueo de Caja</h3>
 
-    <!-- Resumen del dia -->
+    <!-- Estadísticas del día -->
     <div class="arqueo-hoy">
       <div class="arqueo-stat">
         <span class="stat-label">Ventas hoy</span>
         <span class="stat-valor">${{ "%.0f"|format(arqueo_hoy.total_ventas if arqueo_hoy else 0) }}</span>
       </div>
       <div class="arqueo-stat">
-        <span class="stat-label">Pedidos hoy</span>
+        <span class="stat-label">Pedidos</span>
         <span class="stat-valor">{{ arqueo_hoy.num_pedidos if arqueo_hoy else 0 }}</span>
       </div>
       <div class="arqueo-stat">
-        <span class="stat-label">Ticket promedio</span>
+        <span class="stat-label">Promedio</span>
         <span class="stat-valor">
           {% if arqueo_hoy and arqueo_hoy.num_pedidos > 0 %}
             ${{ "%.0f"|format(arqueo_hoy.total_ventas / arqueo_hoy.num_pedidos) }}
@@ -310,7 +327,7 @@
       </div>
     </div>
 
-    <!-- Desglose de ventas por producto del dia -->
+    <!-- Lo más vendido hoy -->
     {% if desglose %}
     <div class="admin-card">
       <h4>Lo más vendido hoy</h4>
@@ -334,7 +351,7 @@
     </div>
     {% endif %}
 
-    <!-- Nota del dia -->
+    <!-- Nota del día -->
     {% if arqueo_hoy %}
     <div class="admin-card">
       <h4>Nota del día ({{ hoy }})</h4>
@@ -346,7 +363,7 @@
     </div>
     {% endif %}
 
-    <!-- Reinicio para pruebas -->
+    <!-- Reinicio -->
     <div class="admin-card reiniciar-card">
       <h4>Reiniciar para pruebas</h4>
       <p class="tab-subtitle">Borra todos los pedidos y reinicia el contador del día. Solo para pruebas.</p>
@@ -356,12 +373,12 @@
       </form>
     </div>
 
-    <!-- Limpiar historial visible -->
+    <!-- Limpiar historial -->
     <div class="admin-card">
       <h4>Limpiar historial</h4>
-      <p class="tab-subtitle">Oculta todos los registros anteriores a hoy para que el historial aparezca limpio. Los datos no se borran de la base de datos.</p>
+      <p class="tab-subtitle">Oculta todos los registros anteriores a hoy. Los datos no se borran de la base de datos.</p>
       <form action="/admin/arqueo/limpiar_historial" method="POST"
-            onsubmit="return confirm('¿Ocultar todo el historial anterior a hoy? Los datos quedan guardados pero no se mostrarán.')">
+            onsubmit="return confirm('¿Ocultar todo el historial anterior a hoy?')">
         <button type="submit" class="btn-limpiar-historial">Limpiar historial visible</button>
       </form>
     </div>
@@ -370,13 +387,13 @@
     <div class="arqueo-filtro-wrap">
       <h4 class="tab-title" style="margin:0">Historial</h4>
       <div class="arqueo-filtro">
-        <span class="filtro-label">Días de evento (Vie/Sáb)</span>
+        <span class="filtro-label">Días de evento</span>
         <button id="btnToggleEventos" class="btn-toggle-eventos activo" onclick="toggleEventos()">
           Ocultar
         </button>
       </div>
     </div>
-    <p class="tab-subtitle">Solo se muestran miércoles, viernes, sábados y domingos. Los viernes y sábados son días de evento (ventas solo cuando hay actividad en la iglesia).</p>
+    <p class="tab-subtitle">Solo se muestran miércoles, viernes, sábados y domingos.</p>
 
     {% if arqueos %}
     <div class="tabla-wrap">
@@ -386,8 +403,7 @@
         </thead>
         <tbody>
           {% for a in arqueos %}
-          <tr {% if a.fecha == hoy %}class="row-hoy"{% endif %}
-              data-dia="{{ a.dia_semana }}">
+          <tr {% if a.fecha == hoy %}class="row-hoy"{% endif %} data-dia="{{ a.dia_semana }}">
             <td>{{ a.fecha }}</td>
             <td>
               {{ a.dia_nombre }}
@@ -408,21 +424,18 @@
     {% endif %}
   </div>
 
-  <!-- TAB: ASIENTOS -->
+  <!-- ════════════════════════════════════════════════════════
+       TAB: ASIENTOS
+  ════════════════════════════════════════════════════════ -->
   <div id="tab-asientos" class="tab-content">
     <h3 class="tab-title">Mapa de Asientos</h3>
     <p class="tab-subtitle">Distribución del salón por sección.</p>
-
     <div class="admin-card">
       <div class="guia-asientos-admin">
         <div class="mapa-scroll-wrap">
           <div class="mapa-interior">
             <div class="escenario">Escenario</div>
             <div class="secciones-admin">
-              {#
-                Orden visual: izq1(1-4) | izq2(5-8) | centro(9-12) | der1(13-16) | der2(17-20)
-                Se renderizan en ese orden para que el centro quede en el medio.
-              #}
               {% for bloque_num in [0, 1, 2, 3, 4] %}
               <div class="bloque {% if bloque_num == 2 %}bloque-centro{% endif %}">
                 {% for fila in ['A','B','C','D','E','F','G','H','I','J'] %}
@@ -441,7 +454,7 @@
             </div>
           </div>
         </div>
-        <p class="scroll-hint">Desliza para ver todos los asientos</p>
+        <p class="scroll-hint">← Desliza para ver todos los asientos →</p>
         <div class="leyenda-asientos">
           <span class="leyenda-item"><span class="punto-leyenda"></span> Asiento disponible</span>
         </div>
@@ -449,11 +462,12 @@
     </div>
   </div>
 
-  <!-- TAB: CONFIG -->
+  <!-- ════════════════════════════════════════════════════════
+       TAB: CONFIG
+  ════════════════════════════════════════════════════════ -->
   <div id="tab-config" class="tab-content">
     <h3 class="tab-title">Configuración de la App</h3>
 
-    <!-- Estado actual de la app -->
     <div class="admin-card estado-app-card {% if not app_activa %}app-inactiva{% endif %}">
       <div class="estado-app-header">
         <div>
@@ -462,7 +476,7 @@
             {% if app_activa %}
               La app está activa. Los usuarios pueden acceder normalmente.
             {% else %}
-              La app está desactivada. Los usuarios ven el mensaje de abajo.
+              La app está desactivada. Los usuarios ven el mensaje configurado.
             {% endif %}
           </p>
         </div>
@@ -473,7 +487,6 @@
     </div>
 
     {% if app_activa %}
-    <!-- Formulario para desactivar -->
     <div class="admin-card">
       <h4>Desactivar la app</h4>
       <p class="tab-subtitle">Los usuarios que intenten acceder verán el mensaje que escribas aquí en lugar del menú.</p>
@@ -489,7 +502,6 @@
       </form>
     </div>
     {% else %}
-    <!-- Formulario para reactivar -->
     <div class="admin-card">
       <h4>Mensaje actual</h4>
       <p class="mensaje-inactiva-preview">{{ mensaje_inactiva or '(sin mensaje)' }}</p>
@@ -507,13 +519,11 @@
 </div><!-- /admin-wrap -->
 
 <script>
-// Muestra u oculta un campo por su ID
 function toggleField(fieldId, show) {
   var el = document.getElementById(fieldId);
   if (el) el.style.display = show ? 'block' : 'none';
 }
 
-// Cambia entre tabs
 function showTab(name, btn) {
   document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -521,7 +531,6 @@ function showTab(name, btn) {
   if (btn) btn.classList.add('active');
 }
 
-// Muestra u oculta las filas de viernes (dia 4) y sabado (dia 5) en el arqueo
 var eventosVisibles = true;
 function toggleEventos() {
   eventosVisibles = !eventosVisibles;
@@ -533,12 +542,9 @@ function toggleEventos() {
   btn.classList.toggle('activo', eventosVisibles);
 }
 
-// --- Notificaciones de nuevos pedidos ---
-
+// --- Audio para notificaciones ---
 var sonidoCtx = null;
 
-// Inicializa o reactiva el AudioContext en la primera interaccion del usuario.
-// Los navegadores moviles bloquean el audio hasta que hay un gesto directo.
 function iniciarAudio() {
   if (!sonidoCtx) {
     sonidoCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -548,8 +554,7 @@ function iniciarAudio() {
   }
 }
 
-// Activar el contexto en cualquier toque o clic sobre la pagina
-document.addEventListener('click',     iniciarAudio, { once: false });
+document.addEventListener('click',      iniciarAudio, { once: false });
 document.addEventListener('touchstart', iniciarAudio, { once: false });
 
 function tocar(frecuencia, inicio, duracion) {
@@ -568,7 +573,6 @@ function tocar(frecuencia, inicio, duracion) {
 function reproducirBeep() {
   try {
     iniciarAudio();
-    // Si el contexto no esta listo aun, esperar y reintentar una vez
     if (sonidoCtx.state === 'suspended') {
       sonidoCtx.resume().then(function() { _beep(); });
     } else {
@@ -584,11 +588,8 @@ function _beep() {
   tocar(1100, t + 0.44, 0.28);
 }
 
-// El conteo inicial se lee desde el DOM para evitar Jinja2 dentro de JS
 var cantidadAnterior = parseInt(document.getElementById('tab-pedidos').dataset.total, 10);
 
-// Refresca la pagina cuando el tab de pedidos esta activo,
-// y notifica si llegaron pedidos nuevos desde la ultima recarga
 setInterval(function() {
   var pedidosTab = document.getElementById('tab-pedidos');
   if (!pedidosTab.classList.contains('active')) return;
@@ -608,19 +609,16 @@ setInterval(function() {
         document.title = 'Administración – Cafetería Adulam';
       }
 
-      // Si hay mas pedidos que antes, reproducir alerta sonora
       if (nueva > cantidadAnterior) {
         reproducirBeep();
       }
       cantidadAnterior = nueva;
 
-      // Solo recargar si el conteo cambio para no interrumpir la navegacion
       if (nueva !== parseInt(pedidosTab.dataset.total, 10)) {
         location.reload();
       }
     })
     .catch(function() {
-      // Si falla el fetch, hacer reload tradicional como fallback
       location.reload();
     });
 }, 5000);

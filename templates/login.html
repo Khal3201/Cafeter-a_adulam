@@ -2,124 +2,114 @@
 <html lang="es">
 <head>
   <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#6b3e26">
+  <meta name="theme-color" content="#1a0e07">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="/static/icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cafetería Adulam</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<div class="container">
-  <div class="logo-area">
-    <div class="logo-icon">☕</div>
-    <h1>Cafetería Adulam</h1>
-    <p class="subtitle">Pide tu bebida desde tu asiento</p>
-  </div>
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <div class="alert">{{ messages[0] }}</div>
+  <!-- HERO HEADER -->
+  <header class="hero-strip">
+    <span class="hero-logo">☕</span>
+    <span class="hero-name">Cafetería Adulam</span>
+    <span class="hero-tagline">Pide desde tu asiento</span>
+    <div class="hero-ornament">
+      <span class="hero-ornament-line"></span>
+      <span class="hero-ornament-dot"></span>
+      <span class="hero-ornament-line right"></span>
+    </div>
+  </header>
+
+  <!-- FORMULARIO -->
+  <div class="container">
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    {% if not app_activa %}
+    <div class="app-inactiva-msg">
+      <span class="app-inactiva-icono">☕</span>
+      <p class="app-inactiva-titulo">No disponible por ahora</p>
+      <p class="app-inactiva-texto">{{ mensaje_inactiva or 'La cafetería no está disponible en este momento.' }}</p>
+    </div>
+    {% else %}
+    <form action="/login" method="POST">
+      <label>Tu nombre</label>
+      <input type="text" name="nombre" placeholder="Ej: María García" required autocomplete="off">
+      <label>Tu asiento</label>
+      <input type="text" name="asiento" placeholder="Ej: B4" required maxlength="10" autocomplete="off">
+      <button type="submit">Entrar al menú</button>
+    </form>
+
+    <button id="btnInstalar" class="btn-instalar" style="display:none">
+      <span class="instalar-icono">⬇</span> Instalar app en este dispositivo
+    </button>
+    <p id="pwaInstalada" class="pwa-ok" style="display:none">✓ App instalada</p>
     {% endif %}
-  {% endwith %}
-
-  {% if not app_activa %}
-  <!-- La app esta desactivada: mostrar mensaje y bloquear el formulario -->
-  <div class="app-inactiva-msg">
-    <div class="app-inactiva-icono">☕</div>
-    <p class="app-inactiva-titulo">No disponible por ahora</p>
-    <p class="app-inactiva-texto">{{ mensaje_inactiva or 'La cafetería no está disponible en este momento.' }}</p>
   </div>
-  {% else %}
-  <form action="/login" method="POST">
-    <label>Tu nombre</label>
-    <input type="text" name="nombre" placeholder="Ej: María García" required autocomplete="off">
-    <label>Tu asiento</label>
-    <input type="text" name="asiento" placeholder="Ej: B4" required maxlength="10" autocomplete="off">
-    <button type="submit">Entrar al menú</button>
-  </form>
 
-  <button id="btnInstalar" class="btn-instalar" style="display:none">
-    <span class="instalar-icono">⬇</span> Instalar app en este dispositivo
-  </button>
-  <p id="pwaInstalada" class="pwa-ok" style="display:none">App ya instalada</p>
-  {% endif %}
-</div>
-
-<!-- Guia de asientos con scroll horizontal en movil -->
-<div class="guia-asientos">
-  <h3>Guía de Asientos</h3>
-
-  <div class="guia-scroll-wrap">
-    <div class="guia-interior">
-      <div class="escenario">Escenario</div>
-      <div class="secciones">
-        {#
-          5 secciones: izq1(1-4) | izq2(5-8) | centro(9-12) | der1(13-16) | der2(17-20)
-          La seccion central tiene separacion visual extra.
-        #}
-        {% for bloque_num in [0, 1, 2, 3, 4] %}
-        <div class="bloque {% if bloque_num == 2 %}bloque-centro{% endif %}">
-          {% for fila in ['A','B','C','D','E','F','G','H','I','J'] %}
-          <div class="seccion">
-            <div class="fila">{{ fila }}</div>
-            {% for num in range(bloque_num*4+1, bloque_num*4+5) %}
-            <div class="punto-wrapper">
-              <div class="numero">{{ num }}</div>
-              <div class="punto"></div>
+  <!-- GUÍA DE ASIENTOS -->
+  <div class="guia-asientos">
+    <h3>Guía de Asientos</h3>
+    <div class="guia-scroll-wrap">
+      <div class="guia-interior">
+        <div class="escenario">Escenario</div>
+        <div class="secciones">
+          {% for bloque_num in [0, 1, 2, 3, 4] %}
+          <div class="bloque {% if bloque_num == 2 %}bloque-centro{% endif %}">
+            {% for fila in ['A','B','C','D','E','F','G','H','I','J'] %}
+            <div class="seccion">
+              <div class="fila">{{ fila }}</div>
+              {% for num in range(bloque_num*4+1, bloque_num*4+5) %}
+              <div class="punto-wrapper">
+                <div class="numero">{{ num }}</div>
+                <div class="punto"></div>
+              </div>
+              {% endfor %}
             </div>
             {% endfor %}
           </div>
           {% endfor %}
         </div>
-        {% endfor %}
       </div>
     </div>
+    <p class="scroll-hint-login">← Desliza para ver todos los asientos →</p>
   </div>
-  <p class="scroll-hint-login">Desliza para ver todos los asientos</p>
-</div>
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/static/sw.js').catch(function(e) {
-    console.log('SW no registrado:', e);
-  });
+  navigator.serviceWorker.register('/static/sw.js').catch(function(e) { console.log('SW:', e); });
 }
-
 var deferredPrompt = null;
 var btnInstalar  = document.getElementById('btnInstalar');
 var pwaInstalada = document.getElementById('pwaInstalada');
-
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  deferredPrompt = e;
-  btnInstalar.style.display = 'block';
-});
-
-btnInstalar.addEventListener('click', function() {
-  if (!deferredPrompt) { return; }
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(function(result) {
-    if (result.outcome === 'accepted') {
-      btnInstalar.style.display = 'none';
-      pwaInstalada.style.display = 'block';
-    }
-    deferredPrompt = null;
+if (btnInstalar) {
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault(); deferredPrompt = e; btnInstalar.style.display = 'flex';
   });
-});
-
-if (window.matchMedia('(display-mode: standalone)').matches) {
-  btnInstalar.style.display = 'none';
-  pwaInstalada.style.display = 'block';
+  btnInstalar.addEventListener('click', function() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r) {
+      if (r.outcome === 'accepted') { btnInstalar.style.display = 'none'; pwaInstalada.style.display = 'block'; }
+      deferredPrompt = null;
+    });
+  });
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    btnInstalar.style.display = 'none'; pwaInstalada.style.display = 'block';
+  }
+  window.addEventListener('appinstalled', function() {
+    btnInstalar.style.display = 'none'; pwaInstalada.style.display = 'block'; deferredPrompt = null;
+  });
 }
-
-window.addEventListener('appinstalled', function() {
-  btnInstalar.style.display = 'none';
-  pwaInstalada.style.display = 'block';
-  deferredPrompt = null;
-});
 </script>
 </body>
 </html>

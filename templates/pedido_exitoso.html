@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#6b3e26">
+  <meta name="theme-color" content="#4e3526">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,22 +13,23 @@
 </head>
 <body>
 <div class="container">
+
   <div class="logo-area">
-    <div class="logo-icon">☕</div>
+    <span class="logo-icon">✓</span>
     <h2>¡Pedido realizado!</h2>
     <p class="subtitle">Asiento <strong>{{ asiento|upper }}</strong></p>
   </div>
 
-  <!-- Tarjeta de estado del pedido -->
+  <!-- Tarjeta de estado -->
   <div class="estado-card" id="estadoCard">
-    <div class="estado-icono" id="estadoIcono">⏳</div>
+    <span class="estado-icono" id="estadoIcono">⏳</span>
     <p class="estado-texto" id="estadoTexto">Tu pedido está en espera</p>
-    <p class="estado-sub" id="estadoSub">En cuanto el equipo lo vea comenzarán a prepararlo</p>
+    <p class="estado-sub"   id="estadoSub">En cuanto el equipo lo vea comenzarán a prepararlo</p>
   </div>
 
   {% if pedido %}
   <div class="resumen-pedido">
-    <p class="resumen-titulo">Tu pedido</p>
+    <p class="resumen-titulo">Resumen de tu pedido</p>
     <p class="resumen-items">{{ pedido["articulos"] }}</p>
     {% if pedido["detalles"] %}
       <p class="resumen-detalles">{{ pedido["detalles"] }}</p>
@@ -39,9 +40,12 @@
   </div>
   {% endif %}
 
+  <div class="versiculo">
+    <p class="versiculo-texto">"Todo lo puedo en Cristo que me fortalece."</p>
+    <p class="versiculo-ref">Filipenses 4:13</p>
+  </div>
 
-
-  <form action="/pedido_exitoso" method="POST" id="formVolver" style="margin-top:20px">
+  <form action="/pedido_exitoso" method="POST" id="formVolver" style="margin-top:16px">
     <button type="submit" id="btnVolver">Volver al inicio</button>
   </form>
 </div>
@@ -54,25 +58,25 @@ var config = {
   pendiente: {
     icono: '⏳',
     texto: 'Tu pedido está en espera',
-    sub: 'En cuanto el equipo lo vea comenzarán a prepararlo',
+    sub:   'En cuanto el equipo lo vea comenzarán a prepararlo',
     clase: 'estado-pendiente'
   },
   preparando: {
     icono: '☕',
     texto: 'Están preparando tu pedido',
-    sub: '¡Ya casi está listo!',
+    sub:   '¡Ya casi está listo!',
     clase: 'estado-preparando'
   },
   entregado: {
     icono: '✓',
     texto: '¡Tu pedido fue entregado!',
-    sub: 'Que lo disfrutes',
+    sub:   'Que lo disfrutes 😊',
     clase: 'estado-entregado'
   }
 };
 
 function actualizarUI(estado) {
-  var cfg = config[estado] || config['entregado'];
+  var cfg  = config[estado] || config['entregado'];
   var card = document.getElementById('estadoCard');
   document.getElementById('estadoIcono').textContent = cfg.icono;
   document.getElementById('estadoTexto').textContent = cfg.texto;
@@ -80,10 +84,8 @@ function actualizarUI(estado) {
   card.className = 'estado-card ' + cfg.clase;
 }
 
-// Muestra el estado inicial sin esperar al primer polling
 actualizarUI(estadoActual);
 
-// Polling cada 4 segundos para reflejar cambios de estado sin recargar la pagina
 var intervalo = setInterval(function() {
   fetch('/estado_pedido/' + asiento)
     .then(function(r) { return r.json(); })
@@ -92,10 +94,7 @@ var intervalo = setInterval(function() {
         estadoActual = data.estado;
         actualizarUI(estadoActual);
       }
-      // Cuando el pedido fue entregado dejar de hacer polling
-      if (data.estado === 'entregado') {
-        clearInterval(intervalo);
-      }
+      if (data.estado === 'entregado') { clearInterval(intervalo); }
     })
     .catch(function() {});
 }, 4000);
