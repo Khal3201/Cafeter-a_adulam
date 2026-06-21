@@ -1,6 +1,6 @@
 import qrcode
 
-url = "https://iplogger.com/2Lx2M6"
+url = ""
 
 # Generar el QR
 qr = qrcode.QRCode(
@@ -16,7 +16,7 @@ qr.make(fit=True)
 img = qr.make_image(fill_color="black", back_color="white")
 
 # Guardar la imagen
-img.save("qr.png")
+img.save("qr_produccion.png")
 
 print("QR generado y guardado como qr_produccion.png")
 print("Apunta a:", url)
