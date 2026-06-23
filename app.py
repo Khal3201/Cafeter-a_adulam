@@ -1,4 +1,3 @@
-import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 import re
 import sqlite3
@@ -10,10 +9,7 @@ def get_db_connection():
     return conn
 
 app = Flask(__name__)
-
-# La clave secreta se toma de una variable de entorno.
-# En PythonAnywhere se configura en el archivo WSGI o en un .env (ver guía).
-app.secret_key = os.environ.get("SECRET_KEY", "cafe_adulam_secret_key")
+app.secret_key = "cafeteria_adulam_secret_key"
 
 # La sesion de admin dura 7 dias sin necesidad de volver a iniciar sesion
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
@@ -22,7 +18,7 @@ ADMIN_NAME = "admin"
 ADMIN_SEAT = "admin"
 
 # Clave de emergencia para reactivar la app desde /reactivar sin sesion activa
-CLAVE_REACTIVAR = os.environ.get("CLAVE_REACTIVAR", "adulam2026")
+CLAVE_REACTIVAR = "adulam2026"
 
 @app.route('/sw.js')
 def service_worker():
@@ -687,8 +683,5 @@ migrate_db()
 init_db()
 
 if __name__ == "__main__":
-    # Solo se usa al correr localmente con "python app.py".
-    # En PythonAnywhere el servidor WSGI llama directamente a "app",
-    # esta sección no se ejecuta.
-    print("Iniciando servidor Cafetería Adulam (modo local)...")
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    print("Iniciando servidor Cafetería Adulam...")
+    app.run(host="0.0.0.0", port=5000, debug=True)
