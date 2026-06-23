@@ -35,11 +35,9 @@ def migrate_db():
         conn.execute("ALTER TABLE pedidos ADD COLUMN detalles TEXT")
     if "total" not in cols_pedidos:
         conn.execute("ALTER TABLE pedidos ADD COLUMN total REAL DEFAULT 0")
-    # Estado del pedido: pendiente / preparando / completado
     if "estado" not in cols_pedidos:
         conn.execute("ALTER TABLE pedidos ADD COLUMN estado TEXT DEFAULT 'pendiente'")
 
-    # Columna para ocultar registros del historial sin borrarlos
     tablas = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
     if "arqueo" in tablas:
         cols_arqueo = [r[1] for r in conn.execute("PRAGMA table_info(arqueo)").fetchall()]
@@ -55,12 +53,19 @@ def migrate_db():
             conn.execute("ALTER TABLE productos ADD COLUMN tiene_azucar INTEGER DEFAULT 1")
         if "tiene_cafe" not in cols_prod:
             conn.execute("ALTER TABLE productos ADD COLUMN tiene_cafe INTEGER DEFAULT 0")
+        # v2: precios grande y chico
+        if "precio_grande" not in cols_prod:
+            conn.execute("ALTER TABLE productos ADD COLUMN precio_grande REAL")
+        if "precio_chico" not in cols_prod:
+            conn.execute("ALTER TABLE productos ADD COLUMN precio_chico REAL")
 
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS productos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT NOT NULL,
             precio REAL NOT NULL,
+            precio_grande REAL,
+            precio_chico REAL,
             categoria TEXT DEFAULT 'Bebida',
             tiene_sabores INTEGER DEFAULT 0,
             tiene_leche INTEGER DEFAULT 0,
@@ -90,11 +95,73 @@ def migrate_db():
             valor TEXT NOT NULL
         );
     """)
-    # Valores por defecto de configuracion si no existen
     conn.execute("INSERT OR IGNORE INTO config (clave, valor) VALUES ('app_activa', '1')")
     conn.execute("INSERT OR IGNORE INTO config (clave, valor) VALUES ('mensaje_inactiva', '')")
     conn.commit()
+
+    # --- Migración menú v2 (se aplica una sola vez) ---
+    menu_v2 = conn.execute(
+        "SELECT valor FROM config WHERE clave = 'menu_v2_aplicado'"
+    ).fetchone()
+
+    if not menu_v2:
+        _sembrar_menu_v2(conn)
+        conn.execute("INSERT INTO config (clave, valor) VALUES ('menu_v2_aplicado', '1')")
+        conn.commit()
+
     conn.close()
+
+
+def _sembrar_menu_v2(conn):
+    """Limpia y re-siembra el catálogo completo según el menú físico Mi Refugio."""
+    conn.execute("DELETE FROM opciones_producto")
+    conn.execute("DELETE FROM productos")
+    conn.execute("DELETE FROM sqlite_sequence WHERE name='productos'")
+    conn.execute("DELETE FROM sqlite_sequence WHERE name='opciones_producto'")
+
+    SABORES_LATTE = "Crema Irlandesa,Caramelo,Vainilla,Avellana,Vino de Café,Té Chai,Matcha"
+    SABORES_FRAPPE = "Crema Irlandesa,Caramelo,Vainilla,Avellana,Vino de Café,Té Chai,Matcha"
+    SABORES_SMOOTHIE = "Fresa,Frambuesa,Mango,Frutos Rojos"
+
+    # (nombre, precio_base, precio_grande, precio_chico, categoria,
+    #  tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar, tiene_cafe, sabores_csv)
+    productos = [
+        # CALIENTES
+        ("Café Americano",   20, 30, 20, "Caliente", 0, 0, 0, 0, 1, None),
+        ("Café Capuchino",   25, 35, 25, "Caliente", 0, 0, 0, 0, 1, None),
+        ("Café Mocca",       30, 40, 30, "Caliente", 0, 0, 0, 0, 1, None),
+        ("Latte Natural",    25, 35, 25, "Caliente", 0, 0, 0, 0, 1, None),
+        ("Latte de Sabor",   35, 45, 35, "Caliente", 1, 0, 0, 0, 1, SABORES_LATTE),
+        # FRÍO
+        ("Café Frío",        20, 30, 20, "Frío",     0, 0, 1, 1, 0, None),
+        # FRAPPÉ
+        ("Frappé Clásico",   30, 40, 30, "Frappé",   0, 0, 1, 1, 0, None),
+        ("Frappé Mocca",     30, 40, 30, "Frappé",   0, 0, 1, 1, 0, None),
+        ("Frappé de Sabor",  40, 50, 40, "Frappé",   1, 0, 1, 1, 0, SABORES_FRAPPE),
+        # SMOOTHIES
+        ("Smoothie",         30, 40, 30, "Smoothie", 1, 0, 1, 0, 0, SABORES_SMOOTHIE),
+        # SNACK
+        ("Galleta",          15, None, None, "Snack", 0, 0, 0, 0, 0, None),
+        ("Muffin",           30, None, None, "Snack", 0, 0, 0, 0, 0, None),
+    ]
+
+    for p in productos:
+        (nombre, precio, pg, pc, cat,
+         ts, tl, th, ta, tc, sabores_csv) = p
+        cur = conn.execute(
+            """INSERT INTO productos
+               (nombre, precio, precio_grande, precio_chico, categoria,
+                tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar, tiene_cafe, activo)
+               VALUES (?,?,?,?,?,?,?,?,?,?,1)""",
+            (nombre, precio, pg, pc, cat, ts, tl, th, ta, tc)
+        )
+        pid = cur.lastrowid
+        if sabores_csv:
+            for s in sabores_csv.split(","):
+                conn.execute(
+                    "INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (?,?,?)",
+                    (pid, "sabor", s.strip())
+                )
 
 
 # --- INIT DB ----------------------------------------------------------------
@@ -116,6 +183,8 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT NOT NULL,
             precio REAL NOT NULL,
+            precio_grande REAL,
+            precio_chico REAL,
             categoria TEXT DEFAULT 'Bebida',
             tiene_sabores INTEGER DEFAULT 0,
             tiene_leche INTEGER DEFAULT 0,
@@ -141,26 +210,14 @@ def init_db():
             cerrado INTEGER DEFAULT 0,
             oculto INTEGER DEFAULT 0
         );
+        CREATE TABLE IF NOT EXISTS config (
+            clave TEXT PRIMARY KEY,
+            valor TEXT NOT NULL
+        );
     """)
-
-    count = conn.execute("SELECT COUNT(*) FROM productos").fetchone()[0]
-    if count == 0:
-        conn.execute("INSERT INTO productos (nombre, precio, categoria, tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar) VALUES ('Café frío', 20, 'Café', 0, 1, 1, 1)")
-        conn.execute("INSERT INTO productos (nombre, precio, categoria, tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar) VALUES ('Smoothie de frutos rojos', 35, 'Smoothie', 1, 0, 1, 1)")
-        conn.execute("INSERT INTO productos (nombre, precio, categoria, tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar) VALUES ('Frappé de café', 30, 'Café', 0, 1, 1, 1)")
-        conn.execute("INSERT INTO productos (nombre, precio, categoria, tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar) VALUES ('Empanada', 25, 'Snack', 0, 0, 0, 0)")
-        conn.commit()
-
-        conn.execute("INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (2, 'sabor', 'Frutos rojos')")
-        conn.execute("INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (2, 'sabor', 'Mango')")
-        conn.execute("INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (2, 'sabor', 'Fresa')")
-        conn.execute("INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (2, 'sabor', 'Durazno')")
-        for pid in [1, 3]:
-            conn.execute("INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (?, 'leche', 'Entera')", (pid,))
-            conn.execute("INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (?, 'leche', 'Deslactosada')", (pid,))
-            conn.execute("INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (?, 'leche', 'De almendra')", (pid,))
-        conn.commit()
-
+    conn.execute("INSERT OR IGNORE INTO config (clave, valor) VALUES ('app_activa', '1')")
+    conn.execute("INSERT OR IGNORE INTO config (clave, valor) VALUES ('mensaje_inactiva', '')")
+    conn.commit()
     conn.close()
 
 
@@ -177,14 +234,13 @@ def get_config(clave, default=''):
 
 @app.route("/")
 def home():
-    app_activa    = get_config('app_activa', '1') == '1'
-    mensaje       = get_config('mensaje_inactiva', '')
+    app_activa = get_config('app_activa', '1') == '1'
+    mensaje    = get_config('mensaje_inactiva', '')
     return render_template("login.html", app_activa=app_activa, mensaje_inactiva=mensaje)
 
 
 @app.route("/login", methods=["POST"])
 def login():
-    # Bloquear acceso si la app esta desactivada (excepto al admin)
     nombre  = request.form["nombre"].strip().lower()
     asiento = request.form["asiento"].strip().lower()
 
@@ -206,7 +262,6 @@ def login():
         flash("El asiento solo puede contener letras y números.")
         return redirect(url_for("home"))
     else:
-        # Verificar si ya hay un pedido activo (pendiente o preparando) para este asiento
         conn = get_db_connection()
         pedido_activo = conn.execute(
             "SELECT id FROM pedidos WHERE asiento = ? AND estado IN ('pendiente', 'preparando')",
@@ -229,13 +284,13 @@ def panel():
         return redirect(url_for("home"))
 
     conn = get_db_connection()
-    productos = conn.execute("SELECT * FROM productos WHERE activo = 1").fetchall()
-    opciones = conn.execute("SELECT * FROM opciones_producto WHERE disponible = 1").fetchall()
+    productos = conn.execute("SELECT * FROM productos WHERE activo = 1 ORDER BY categoria, nombre").fetchall()
+    opciones  = conn.execute("SELECT * FROM opciones_producto WHERE disponible = 1").fetchall()
     conn.close()
 
     opts = {}
     for op in opciones:
-        pid = op["producto_id"]
+        pid  = op["producto_id"]
         tipo = op["tipo"]
         if pid not in opts:
             opts[pid] = {}
@@ -255,8 +310,8 @@ def pagar():
     if "nombre" not in session:
         return redirect(url_for("home"))
 
-    nombre  = request.form["nombre"]
-    asiento = request.form["asiento"]
+    nombre         = request.form["nombre"]
+    asiento        = request.form["asiento"]
     articulos_json = request.form.get("articulos_json", "[]")
 
     import json
@@ -269,7 +324,6 @@ def pagar():
         flash("Debes seleccionar al menos un artículo.")
         return redirect(url_for("panel"))
 
-    # Verificar nuevamente que no haya pedido activo (proteccion doble)
     conn = get_db_connection()
     pedido_activo = conn.execute(
         "SELECT id FROM pedidos WHERE asiento = ? AND estado IN ('pendiente', 'preparando')",
@@ -284,26 +338,27 @@ def pagar():
 
     partes = []
     for i in items:
-        txt = i["nombre"]
+        txt  = i["nombre"]
         subs = []
-        if i.get("sabor"):  subs.append("Sabor: "  + i["sabor"])
-        if i.get("leche"):  subs.append("Leche: "  + i["leche"])
-        if i.get("cafe"):   subs.append("Café: "   + i["cafe"])
-        if i.get("azucar"): subs.append("Azúcar: " + i["azucar"])
-        if i.get("hielo"):  subs.append("Hielo: "  + i["hielo"])
+        if i.get("tamano"):  subs.append(i["tamano"])
+        if i.get("sabor"):   subs.append("Sabor: "  + i["sabor"])
+        if i.get("leche"):   subs.append("Leche: "  + i["leche"])
+        if i.get("cafe"):    subs.append("Café: "   + i["cafe"])
+        if i.get("azucar"):  subs.append("Azúcar: " + i["azucar"])
+        if i.get("hielo"):   subs.append("Hielo: "  + i["hielo"])
         if subs:
             txt += " (" + ", ".join(subs) + ")"
         partes.append(txt)
 
     detalles_str = "; ".join(partes)
-    total = sum([float(i.get("precio", 0)) for i in items])
+    total        = sum([float(i.get("precio", 0)) for i in items])
 
     conn.execute(
         "INSERT INTO pedidos (nombre, asiento, articulos, detalles, total, estado) VALUES (?, ?, ?, ?, ?, 'pendiente')",
         (nombre, asiento, articulos_str, detalles_str, total)
     )
 
-    hoy = date.today().isoformat()
+    hoy      = date.today().isoformat()
     existing = conn.execute("SELECT id FROM arqueo WHERE fecha = ?", (hoy,)).fetchone()
     if existing:
         conn.execute("UPDATE arqueo SET total_ventas = total_ventas + ?, num_pedidos = num_pedidos + 1 WHERE fecha = ?", (total, hoy))
@@ -313,7 +368,6 @@ def pagar():
     conn.commit()
     conn.close()
 
-    # Guardar datos en sesion para la pagina de estado
     session["ultimo_asiento"] = asiento
     session["ultimo_nombre"]  = nombre
     session.pop("nombre", None)
@@ -329,7 +383,7 @@ def pedido_exitoso():
     if not asiento:
         return redirect(url_for("home"))
 
-    conn = get_db_connection()
+    conn   = get_db_connection()
     pedido = conn.execute(
         "SELECT * FROM pedidos WHERE asiento = ? AND estado IN ('pendiente', 'preparando') ORDER BY fecha DESC LIMIT 1",
         (asiento,)
@@ -346,12 +400,11 @@ def pedido_exitoso_post():
     return redirect(url_for("home"))
 
 
-# Endpoint JSON para el admin: devuelve cuantos pedidos activos hay
 @app.route("/admin/conteo_pedidos")
 def conteo_pedidos():
     if not session.get("admin"):
         return jsonify({"total": 0})
-    conn = get_db_connection()
+    conn  = get_db_connection()
     total = conn.execute(
         "SELECT COUNT(*) FROM pedidos WHERE estado IN ('pendiente', 'preparando')"
     ).fetchone()[0]
@@ -359,10 +412,9 @@ def conteo_pedidos():
     return jsonify({"total": total})
 
 
-# Endpoint JSON para que la pagina de estado haga polling sin recargar toda la pagina
 @app.route("/estado_pedido/<asiento>")
 def estado_pedido(asiento):
-    conn = get_db_connection()
+    conn   = get_db_connection()
     pedido = conn.execute(
         "SELECT estado FROM pedidos WHERE asiento = ? AND estado IN ('pendiente', 'preparando') ORDER BY fecha DESC LIMIT 1",
         (asiento,)
@@ -381,7 +433,7 @@ def admin():
         flash("Acceso no autorizado.")
         return redirect(url_for("home"))
 
-    conn = get_db_connection()
+    conn      = get_db_connection()
     pedidos   = conn.execute("SELECT * FROM pedidos WHERE estado IN ('pendiente','preparando') ORDER BY fecha DESC").fetchall()
     productos = conn.execute("SELECT * FROM productos ORDER BY categoria, nombre").fetchall()
     opciones  = conn.execute("""
@@ -391,33 +443,29 @@ def admin():
         ORDER BY p.nombre, op.tipo, op.valor
     """).fetchall()
 
-    hoy = date.today().isoformat()
+    hoy        = date.today().isoformat()
     arqueo_hoy = conn.execute("SELECT * FROM arqueo WHERE fecha = ?", (hoy,)).fetchone()
 
-    # Solo se guardan y muestran miercoles (2), viernes (4), sabados (5) y domingos (6)
-    # Python weekday(): 0=lunes ... 6=domingo
     DIAS_OPERATIVOS = (2, 4, 5, 6)
-    NOMBRES_DIA = {2: 'Miércoles', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+    NOMBRES_DIA     = {2: 'Miércoles', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
 
     arqueos_raw = conn.execute(
         "SELECT * FROM arqueo WHERE oculto = 0 ORDER BY fecha DESC LIMIT 120"
     ).fetchall()
 
-    # Filtrar solo dias operativos y agregar dia_semana y dia_nombre como dict
     arqueos = []
     for a in arqueos_raw:
         try:
             fecha_dt = date.fromisoformat(a["fecha"])
-            dia = fecha_dt.weekday()
+            dia      = fecha_dt.weekday()
             if dia in DIAS_OPERATIVOS:
-                row = dict(a)
+                row              = dict(a)
                 row["dia_semana"] = dia
                 row["dia_nombre"] = NOMBRES_DIA[dia]
                 arqueos.append(row)
         except Exception:
             pass
 
-    # Desglose de ventas por producto del dia actual
     desglose = conn.execute("""
         SELECT p.nombre, p.categoria, COUNT(*) as cantidad, SUM(p.precio) as subtotal
         FROM pedidos ped
@@ -466,24 +514,37 @@ def preparar(id):
 
 # CRUD Productos
 
+CATEGORIAS = ['Caliente', 'Frío', 'Frappé', 'Smoothie', 'Snack', 'Otro']
+
 @app.route("/admin/producto/nuevo", methods=["POST"])
 def producto_nuevo():
     if not session.get("admin"):
         return redirect(url_for("home"))
 
-    nombre       = request.form["nombre"].strip()
-    precio       = float(request.form["precio"])
-    categoria    = request.form["categoria"].strip()
+    nombre        = request.form["nombre"].strip()
+    precio_grande = request.form.get("precio_grande", "").strip()
+    precio_chico  = request.form.get("precio_chico",  "").strip()
+    categoria     = request.form["categoria"].strip()
+
+    # precio base = grande si existe, si no el campo precio
+    precio_base = float(precio_grande) if precio_grande else float(request.form.get("precio", 0))
+    pg = float(precio_grande) if precio_grande else None
+    pc = float(precio_chico)  if precio_chico  else None
+
     tiene_sabores = 1 if request.form.get("tiene_sabores") else 0
     tiene_leche   = 1 if request.form.get("tiene_leche")   else 0
     tiene_hielo   = 1 if request.form.get("tiene_hielo")   else 0
     tiene_azucar  = 1 if request.form.get("tiene_azucar")  else 0
     tiene_cafe    = 1 if request.form.get("tiene_cafe")    else 0
 
-    conn = get_db_connection()
-    cur = conn.execute(
-        "INSERT INTO productos (nombre, precio, categoria, tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar, tiene_cafe) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (nombre, precio, categoria, tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar, tiene_cafe)
+    conn   = get_db_connection()
+    cur    = conn.execute(
+        """INSERT INTO productos
+           (nombre, precio, precio_grande, precio_chico, categoria,
+            tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar, tiene_cafe)
+           VALUES (?,?,?,?,?,?,?,?,?,?)""",
+        (nombre, precio_base, pg, pc, categoria,
+         tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar, tiene_cafe)
     )
     prod_id = cur.lastrowid
 
@@ -508,9 +569,15 @@ def producto_editar(id):
     if not session.get("admin"):
         return redirect(url_for("home"))
 
-    nombre       = request.form["nombre"].strip()
-    precio       = float(request.form["precio"])
-    categoria    = request.form["categoria"].strip()
+    nombre        = request.form["nombre"].strip()
+    precio_grande = request.form.get("precio_grande", "").strip()
+    precio_chico  = request.form.get("precio_chico",  "").strip()
+    categoria     = request.form["categoria"].strip()
+
+    precio_base = float(precio_grande) if precio_grande else float(request.form.get("precio", 0))
+    pg = float(precio_grande) if precio_grande else None
+    pc = float(precio_chico)  if precio_chico  else None
+
     tiene_sabores = 1 if request.form.get("tiene_sabores") else 0
     tiene_leche   = 1 if request.form.get("tiene_leche")   else 0
     tiene_hielo   = 1 if request.form.get("tiene_hielo")   else 0
@@ -520,8 +587,12 @@ def producto_editar(id):
 
     conn = get_db_connection()
     conn.execute(
-        "UPDATE productos SET nombre=?, precio=?, categoria=?, tiene_sabores=?, tiene_leche=?, tiene_hielo=?, tiene_azucar=?, tiene_cafe=?, activo=? WHERE id=?",
-        (nombre, precio, categoria, tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar, tiene_cafe, activo, id)
+        """UPDATE productos
+           SET nombre=?, precio=?, precio_grande=?, precio_chico=?, categoria=?,
+               tiene_sabores=?, tiene_leche=?, tiene_hielo=?, tiene_azucar=?, tiene_cafe=?, activo=?
+           WHERE id=?""",
+        (nombre, precio_base, pg, pc, categoria,
+         tiene_sabores, tiene_leche, tiene_hielo, tiene_azucar, tiene_cafe, activo, id)
     )
     conn.commit()
     conn.close()
@@ -551,7 +622,7 @@ def opcion_nueva():
     producto_id = int(request.form["producto_id"])
     tipo  = request.form["tipo"]
     valor = request.form["valor"].strip()
-    conn = get_db_connection()
+    conn  = get_db_connection()
     conn.execute("INSERT INTO opciones_producto (producto_id, tipo, valor) VALUES (?, ?, ?)", (producto_id, tipo, valor))
     conn.commit()
     conn.close()
@@ -590,7 +661,7 @@ def arqueo_nota():
         return redirect(url_for("home"))
     fecha = request.form["fecha"]
     notas = request.form["notas"]
-    conn = get_db_connection()
+    conn  = get_db_connection()
     conn.execute("UPDATE arqueo SET notas=? WHERE fecha=?", (notas, fecha))
     conn.commit()
     conn.close()
@@ -601,7 +672,7 @@ def arqueo_nota():
 def arqueo_reiniciar():
     if not session.get("admin"):
         return redirect(url_for("home"))
-    hoy = date.today().isoformat()
+    hoy  = date.today().isoformat()
     conn = get_db_connection()
     conn.execute("DELETE FROM pedidos")
     conn.execute("UPDATE arqueo SET total_ventas=0, num_pedidos=0 WHERE fecha=?", (hoy,))
@@ -615,9 +686,8 @@ def arqueo_reiniciar():
 def arqueo_limpiar_historial():
     if not session.get("admin"):
         return redirect(url_for("home"))
-    hoy = date.today().isoformat()
+    hoy  = date.today().isoformat()
     conn = get_db_connection()
-    # Marca como ocultos todos los registros anteriores a hoy
     conn.execute("UPDATE arqueo SET oculto = 1 WHERE fecha < ?", (hoy,))
     conn.commit()
     conn.close()
@@ -638,7 +708,7 @@ def config_desactivar():
     if not session.get("admin"):
         return redirect(url_for("home"))
     mensaje = request.form.get("mensaje", "").strip()
-    conn = get_db_connection()
+    conn    = get_db_connection()
     conn.execute("UPDATE config SET valor = '0' WHERE clave = 'app_activa'")
     conn.execute("UPDATE config SET valor = ? WHERE clave = 'mensaje_inactiva'", (mensaje,))
     conn.commit()
@@ -669,9 +739,8 @@ def reactivar():
             conn.execute("UPDATE config SET valor = '1' WHERE clave = 'app_activa'")
             conn.commit()
             conn.close()
-            # Iniciar sesion de admin para que pueda acceder al panel completo
             session.permanent = True
-            session["admin"] = True
+            session["admin"]  = True
             flash("App reactivada correctamente.")
             return redirect(url_for("admin"))
         else:
@@ -683,5 +752,5 @@ migrate_db()
 init_db()
 
 if __name__ == "__main__":
-    print("Iniciando servidor Cafetería Adulam...")
+    print("Iniciando servidor Cafetería Mi Refugio...")
     app.run(host="0.0.0.0", port=5000, debug=True)
