@@ -491,13 +491,14 @@ def admin():
             pass
 
     desglose = conn.execute("""
-        SELECT p.nombre, p.categoria, COUNT(*) as cantidad, SUM(p.precio) as subtotal
-        FROM pedidos ped
-        JOIN productos p ON instr(ped.articulos, p.nombre) > 0
-        WHERE date(ped.fecha) = ?
-        GROUP BY p.id
-        ORDER BY cantidad DESC
-    """, (hoy,)).fetchall()
+    SELECT p.nombre, p.categoria, COUNT(*) as cantidad,
+           SUM(COALESCE(p.precio_grande, p.precio_chico, 0)) as subtotal
+    FROM pedidos ped
+    JOIN productos p ON instr(ped.articulos, p.nombre) > 0
+    WHERE date(ped.fecha) = ?
+    GROUP BY p.id
+    ORDER BY cantidad DESC
+""", (hoy,)).fetchall()
 
     conn.close()
 
@@ -772,8 +773,8 @@ def reactivar():
     return render_template("reactivar.html", error=error)
 
 
-migrate_db()
 init_db()
+migrate_db()
 
 if __name__ == "__main__":
     print("Iniciando servidor Cafetería Mi Refugio...")
