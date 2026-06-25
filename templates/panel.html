@@ -2,45 +2,292 @@
 <html lang="es">
 <head>
   <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#4e3526">
+  <meta name="theme-color" content="#6b3e26">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="/static/icon-192.jpg">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Menú – Cafetería Adulam</title>
+  <title>Menú – Cafetería Mi Refugio</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* ── CATEGORÍA HEADER ── */
+    .cat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 22px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--border-md);
+    }
+    .cat-icon { font-size: 18px; }
+    .cat-title { font-size: 15px; font-weight: bold; color: var(--caramel); }
+
+    /* ── PRECIOS DOBLES ── */
+    .precios-wrap {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .precio-tag {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--caramel);
+      background: var(--mist);
+      border-radius: 20px;
+      padding: 2px 8px;
+    }
+
+    /* ── BOTÓN AGREGAR ── */
+    .btn-agregar {
+      width: auto;
+      padding: 8px 14px;
+      background: var(--cafe);
+      color: var(--espresso);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-top: 0;
+      flex-shrink: 0;
+    }
+    .btn-agregar:hover { background: var(--mahogany); }
+
+    /* ── MODAL TAMAÑO ── */
+    .tamano-group { margin-bottom: 14px; }
+    .tamano-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .btn-tamano {
+      padding: 10px;
+      border: 2px solid var(--border-md);
+      border-radius: var(--radius-sm);
+      background: var(--roast);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text);
+      text-align: center;
+      transition: all 0.15s;
+      margin: 0;
+    }
+    .btn-tamano:hover { border-color: var(--caramel); background: var(--mist); }
+    .btn-tamano.selected { border-color: var(--caramel); background: var(--cafe); color: var(--espresso); }
+    .btn-tamano span { display: block; font-size: 12px; font-weight: normal; margin-top: 2px; }
+
+    /* ── MAPA DE ASIENTOS ── */
+    .mapa-section {
+      margin-top: 28px;
+      width: 95%;
+      max-width: 420px;
+      text-align: center;
+    }
+    .mapa-section h3 {
+      color: var(--caramel);
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+    .mapa-scroll-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-md) var(--mist);
+    }
+    .mapa-scroll-wrap::-webkit-scrollbar { height: 6px; }
+    .mapa-scroll-wrap::-webkit-scrollbar-track { background: var(--mist); border-radius: 3px; }
+    .mapa-scroll-wrap::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 3px; }
+    .mapa-interior {
+      display: inline-block;
+      min-width: 520px;
+      padding: 4px 8px 8px;
+    }
+    .escenario-panel {
+      margin: 0 auto 16px;
+      width: 70%;
+      height: 36px;
+      border: 2px solid var(--caramel);
+      border-bottom-left-radius: 22px;
+      border-bottom-right-radius: 22px;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      background: var(--mist);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 12px;
+      color: var(--caramel);
+      position: relative;
+    }
+    .escenario-panel::before {
+      content: "";
+      position: absolute;
+      top: -7px; left: 10%;
+      width: 80%; height: 3px;
+      background: var(--cafe);
+      border-radius: 2px;
+    }
+    .secciones-panel {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .bloque-panel { display: flex; flex-direction: column; gap: 14px; }
+    .bloque-panel.bloque-centro {
+      border-left: 2px dashed var(--border-md);
+      border-right: 2px dashed var(--border-md);
+      padding: 0 4px;
+    }
+    .seccion-panel {
+      display: grid;
+      grid-template-columns: 16px repeat(4, 22px);
+      gap: 6px;
+      align-items: center;
+    }
+    .fila-panel { font-weight: bold; font-size: 11px; color: var(--caramel); }
+    .punto-wrap-panel { position: relative; width: 18px; height: 18px; }
+    .punto-panel {
+      width: 18px; height: 18px;
+      background: var(--cafe);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .punto-panel:hover { transform: scale(1.3); }
+    .punto-panel.activo { background: #e67e22; transform: scale(1.3); }
+    .num-panel {
+      position: absolute;
+      top: -13px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      font-weight: bold;
+      color: var(--caramel);
+      pointer-events: none;
+    }
+
+    /* ── TOOLTIP DE ASIENTO ── */
+    .asiento-tooltip {
+      display: none;
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--roast);
+      border: 1px solid var(--caramel);
+      border-radius: 8px;
+      padding: 8px 10px;
+      z-index: 200;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(111,78,55,0.2);
+      text-align: center;
+    }
+    .asiento-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--caramel);
+    }
+    .asiento-tooltip p {
+      font-size: 11px;
+      color: var(--caramel);
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .btn-elegir-asiento {
+      padding: 5px 12px;
+      background: var(--cafe);
+      color: var(--espresso);
+      border: none;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      margin: 0;
+      width: auto;
+    }
+    .btn-elegir-asiento:hover { background: var(--mahogany); }
+
+    /* ── ENTRADA ASIENTO (resaltado) ── */
+    #asientoInput.resaltado {
+      border-color: #e67e22;
+      box-shadow: 0 0 0 3px rgba(230,126,34,0.25);
+      animation: parpadear 0.5s ease 2;
+    }
+    @keyframes parpadear {
+      0%, 100% { background: var(--roast); }
+      50% { background: #fff8f0; }
+    }
+
+    /* ── SCROLL HINT ── */
+    .scroll-hint-panel {
+      display: none;
+      font-size: 11px;
+      color: rgba(245,234,216,0.38);
+      text-align: center;
+      margin-top: 4px;
+    }
+    @media (max-width: 520px) {
+      .scroll-hint-panel { display: block; }
+    }
+  </style>
 </head>
 <body>
 
 <script id="datos-opciones" type="application/json">{{ opciones|tojson }}</script>
 
 <div class="container">
-
-  <!-- HEADER -->
   <div class="logo-area">
-    <span class="logo-icon">☕</span>
-    <h2>Hola, {{ nombre|capitalize }}</h2>
-    <p class="subtitle">Asiento <strong>{{ asiento|upper }}</strong></p>
+    <div class="logo-icon">☕</div>
+    <h2>Hola, {{ nombre|capitalize }}!</h2>
+    <p class="subtitle">Asiento <strong id="asientoDisplay">{{ asiento|upper }}</strong></p>
   </div>
 
-  <!-- MENÚ -->
   <h3 class="section-title">Nuestro Menú</h3>
 
-  {% set categorias = productos | map(attribute='categoria') | unique | list %}
-  {% for cat in categorias %}
-    <p class="cat-label">{{ cat }}</p>
-    {% for producto in productos if producto.categoria == cat %}
+  {# Agrupar productos por categoría #}
+  {% set categorias_iconos = {
+    'Caliente': '🔥',
+    'Frío': '🧊',
+    'Frappé': '🥤',
+    'Smoothie': '🍓',
+    'Snack': '🥐',
+    'Otro': '✨'
+  } %}
+
+  {% set ns = namespace(cat_actual='') %}
+  {% for producto in productos %}
+    {% if producto.categoria != ns.cat_actual %}
+      {% set ns.cat_actual = producto.categoria %}
+      <div class="cat-header">
+        <span class="cat-icon">{{ categorias_iconos.get(producto.categoria, '•') }}</span>
+        <span class="cat-title">{{ producto.categoria }}</span>
+      </div>
+    {% endif %}
+
     <div class="menu-item">
       <div class="menu-info">
         <strong>{{ producto.nombre }}</strong>
-        <p class="precio">${{ "%.0f"|format(producto.precio) }}</p>
+        <div class="precios-wrap">
+          {% if producto.precio_chico %}
+            <span class="precio-tag">Chico ${{ "%.0f"|format(producto.precio_chico) }}</span>
+            <span class="precio-tag">Grande ${{ "%.0f"|format(producto.precio_grande) }}</span>
+          {% else %}
+            <span class="precio-tag">${{ "%.0f"|format(producto.precio_grande) }}</span>
+          {% endif %}
+        </div>
       </div>
       <button
         class="btn-agregar"
         data-id="{{ producto.id }}"
         data-nombre="{{ producto.nombre }}"
-        data-precio="{{ producto.precio }}"
+        data-precio-grande="{{ producto.precio_grande }}"
+        data-precio-chico="{{ producto.precio_chico if producto.precio_chico else '' }}"
         data-sabores="{{ producto.tiene_sabores }}"
         data-leche="{{ producto.tiene_leche }}"
         data-hielo="{{ producto.tiene_hielo }}"
@@ -50,22 +297,21 @@
         + Agregar
       </button>
     </div>
-    {% endfor %}
   {% endfor %}
 
   <!-- PEDIDO -->
   <div class="pedido-section">
     <h3 class="section-title">Tu pedido</h3>
     <ul id="listaPedido" class="lista-pedido">
-      <li class="empty-cart" id="emptyMsg">No has agregado nada aún ☕</li>
+      <li class="empty-cart" id="emptyMsg">No has agregado nada aún</li>
     </ul>
     <div class="total-row">
       <span>Total</span>
       <span class="total-monto">$<span id="total">0</span></span>
     </div>
-    <form action="/pagar" method="POST" onsubmit="return enviarPedido()">
+    <form action="/pagar" method="POST" onsubmit="return enviarPedido()" id="formPedido">
       <input type="hidden" name="nombre" value="{{ nombre }}">
-      <input type="hidden" name="asiento" value="{{ asiento }}">
+      <input type="hidden" name="asiento" id="asientoHidden" value="{{ asiento }}">
       <input type="hidden" name="articulos_json" id="articulos_json" value="[]">
       <button type="submit" id="btnPedir" disabled>Realizar pedido</button>
     </form>
@@ -85,19 +331,6 @@
   </div>
 </div>
 
-<style>
-/* Panel-specific overrides */
-.cat-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
-  margin: 18px 0 8px 2px;
-}
-.cat-label:first-of-type { margin-top: 4px; }
-</style>
-
 <script>
 var opcionesData = JSON.parse(document.getElementById('datos-opciones').textContent);
 var carritoTotal = 0;
@@ -105,21 +338,40 @@ var carritoItems = [];
 var itemActual   = null;
 
 function abrirOpciones(btn) {
-  var id          = parseInt(btn.dataset.id,      10);
-  var nombre      = btn.dataset.nombre;
-  var precio      = parseFloat(btn.dataset.precio);
-  var tieneSabores = parseInt(btn.dataset.sabores, 10);
-  var tieneLeche   = parseInt(btn.dataset.leche,   10);
-  var tieneHielo   = parseInt(btn.dataset.hielo,   10);
-  var tieneAzucar  = parseInt(btn.dataset.azucar,  10);
-  var tieneCafe    = parseInt(btn.dataset.cafe,    10);
+  var id            = parseInt(btn.dataset.id, 10);
+  var nombre        = btn.dataset.nombre;
+  var precioGrande  = parseFloat(btn.dataset.precioGrande);
+  var precioChico   = btn.dataset.precioChico ? parseFloat(btn.dataset.precioChico) : null;
+  var tieneSabores  = parseInt(btn.dataset.sabores, 10);
+  var tieneLeche    = parseInt(btn.dataset.leche,   10);
+  var tieneHielo    = parseInt(btn.dataset.hielo,   10);
+  var tieneAzucar   = parseInt(btn.dataset.azucar,  10);
+  var tieneCafe     = parseInt(btn.dataset.cafe,    10);
 
-  itemActual = { id: id, nombre: nombre, precio: precio };
+  itemActual = {
+    id: id,
+    nombre: nombre,
+    precioGrande: precioGrande,
+    precioChico: precioChico
+  };
+
   document.getElementById('modalTitulo').textContent = nombre;
 
   var opts = opcionesData[id] || {};
   var html = '';
 
+  /* Selección de tamaño (solo si hay precio_chico) */
+  if (precioChico !== null) {
+    html += '<div class="tamano-group"><label>Tamaño</label>';
+    html += '<div class="tamano-btns">';
+    html += '<button type="button" class="btn-tamano" id="btnChico" onclick="selTamano(\'chico\')">'
+          + 'Chico<span>$' + precioChico.toFixed(0) + '</span></button>';
+    html += '<button type="button" class="btn-tamano selected" id="btnGrande" onclick="selTamano(\'grande\')">'
+          + 'Grande<span>$' + precioGrande.toFixed(0) + '</span></button>';
+    html += '</div></div>';
+  }
+
+  /* Sabores */
   if (tieneSabores) {
     var sabores = opts['sabor'] || [];
     if (sabores.length === 0) {
@@ -134,6 +386,7 @@ function abrirOpciones(btn) {
     }
   }
 
+  /* Leche */
   if (tieneLeche) {
     var leches = opts['leche'] || [];
     if (leches.length > 0) {
@@ -146,6 +399,7 @@ function abrirOpciones(btn) {
     }
   }
 
+  /* Café */
   if (tieneCafe) {
     html += '<div class="opcion-grupo"><label>Cantidad de caf\u00e9</label>';
     html += '<div class="radio-group">';
@@ -156,6 +410,7 @@ function abrirOpciones(btn) {
     html += '</div></div>';
   }
 
+  /* Azúcar */
   if (tieneAzucar) {
     html += '<div class="opcion-grupo"><label>Cantidad de az\u00facar</label>';
     html += '<div class="radio-group">';
@@ -166,6 +421,7 @@ function abrirOpciones(btn) {
     html += '</div></div>';
   }
 
+  /* Hielo */
   if (tieneHielo) {
     html += '<div class="opcion-grupo"><label>Cantidad de hielo</label>';
     html += '<div class="radio-group">';
@@ -180,13 +436,23 @@ function abrirOpciones(btn) {
   document.getElementById('modalOverlay').style.display = 'flex';
 }
 
+var tamanoActual = 'grande';
+function selTamano(t) {
+  tamanoActual = t;
+  var bc = document.getElementById('btnChico');
+  var bg = document.getElementById('btnGrande');
+  if (bc) bc.classList.toggle('selected', t === 'chico');
+  if (bg) bg.classList.toggle('selected', t === 'grande');
+}
+
 function cerrarModal(e) {
   if (e.target.id === 'modalOverlay') { cancelarModal(); }
 }
 
 function cancelarModal() {
   document.getElementById('modalOverlay').style.display = 'none';
-  itemActual = null;
+  itemActual  = null;
+  tamanoActual = 'grande';
 }
 
 function confirmarItem() {
@@ -209,9 +475,20 @@ function confirmarItem() {
     return;
   }
 
+  /* Determinar precio según tamaño */
+  var precio;
+  var tamanoLabel = '';
+  if (itemActual.precioChico !== null) {
+    precio = tamanoActual === 'chico' ? itemActual.precioChico : itemActual.precioGrande;
+    tamanoLabel = tamanoActual === 'chico' ? 'Chico' : 'Grande';
+  } else {
+    precio = itemActual.precioGrande;
+  }
+
   var item = {
     nombre: itemActual.nombre,
-    precio: itemActual.precio,
+    precio: precio,
+    tamano: tamanoLabel,
     sabor:  sabor,
     leche:  leche,
     azucar: azucar,
@@ -220,19 +497,20 @@ function confirmarItem() {
   };
 
   carritoItems.push(item);
-  carritoTotal += item.precio;
+  carritoTotal += precio;
 
   document.getElementById('emptyMsg').style.display = 'none';
 
-  var li   = document.createElement('li');
+  var li = document.createElement('li');
   li.className = 'pedido-item';
 
   var subs = [];
-  if (sabor)  { subs.push('Sabor: ' + sabor); }
-  if (leche)  { subs.push('Leche: ' + leche); }
-  if (cafe)   { subs.push(cafe); }
-  if (azucar) { subs.push(azucar); }
-  if (hielo)  { subs.push(hielo); }
+  if (tamanoLabel) subs.push(tamanoLabel);
+  if (sabor)  subs.push('Sabor: ' + sabor);
+  if (leche)  subs.push('Leche: ' + leche);
+  if (cafe)   subs.push(cafe);
+  if (azucar) subs.push(azucar);
+  if (hielo)  subs.push(hielo);
 
   li.innerHTML =
     '<div>' +
@@ -240,8 +518,8 @@ function confirmarItem() {
       '<span class="item-detalle">' + subs.join(' \u00b7 ') + '</span>' +
     '</div>' +
     '<div class="item-precio-del">' +
-      '<span>$' + item.precio + '</span>' +
-      '<button class="btn-del" onclick="eliminarItem(this)">&#x2715;</button>' +
+      '<span>$' + precio + '</span>' +
+      '<button class="btn-del" onclick="eliminarItem(this)">\u2715</button>' +
     '</div>';
 
   document.getElementById('listaPedido').appendChild(li);

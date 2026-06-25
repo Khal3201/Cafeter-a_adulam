@@ -10,6 +10,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cafetería Adulam</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* ── MAPA CON TOOLTIP ── */
+    .punto-wrapper { position: relative; width: 14px; height: 14px; }
+    .punto {
+      width: 14px; height: 14px;
+      background: var(--cafe);
+      border-radius: 50%;
+      opacity: 0.7;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s, background 0.15s;
+    }
+    .punto:hover { opacity: 1; transform: scale(1.3); }
+    .punto.activo { background: var(--caramel); opacity: 1; transform: scale(1.3); }
+
+    /* Tooltip */
+    .seat-tip {
+      display: none;
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--roast);
+      border: 1px solid var(--caramel);
+      border-radius: var(--radius-sm);
+      padding: 7px 10px;
+      z-index: 300;
+      white-space: nowrap;
+      box-shadow: var(--shadow);
+      text-align: center;
+      min-width: 88px;
+    }
+    .seat-tip::after {
+      content: "";
+      position: absolute;
+      top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--caramel);
+    }
+    .seat-tip p {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--cream);
+      margin-bottom: 5px;
+      letter-spacing: 0.3px;
+    }
+    .btn-elegir {
+      padding: 3px 11px;
+      background: var(--caramel);
+      color: var(--espresso);
+      border: none;
+      border-radius: 20px;
+      font-family: 'Jost', Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      margin: 0;
+      width: auto;
+      letter-spacing: 0.3px;
+    }
+    .btn-elegir:hover { background: var(--gold); }
+
+    /* Resaltado del input cuando se elige asiento */
+    input[name="asiento"].resaltado {
+      border-color: var(--caramel) !important;
+      box-shadow: 0 0 0 3px rgba(194,121,65,0.25) !important;
+      animation: pulsoInput 0.4s ease 2;
+    }
+    @keyframes pulsoInput {
+      0%, 100% { background: rgba(26,14,7,0.6); }
+      50%       { background: rgba(194,121,65,0.08); }
+    }
+  </style>
 </head>
 <body>
 
@@ -41,12 +114,12 @@
       <p class="app-inactiva-texto">{{ mensaje_inactiva or 'La cafetería no está disponible en este momento.' }}</p>
     </div>
     {% else %}
-    <form action="/login" method="POST">
+    <form action="/login" method="POST" id="formLogin">
       <label>Tu nombre</label>
       <input type="text" name="nombre" placeholder="Ej: María García" required autocomplete="off">
       <label>Tu asiento</label>
-      <input type="text" name="asiento" placeholder="Ej: B4" required maxlength="10" autocomplete="off">
-      <button type="submit">Entrar al menú</button>
+      <input type="text" name="asiento" id="inputAsiento" placeholder="Ej: B4" required maxlength="10" autocomplete="off">
+      <button type="submit" id="btnEntrar">Entrar al menú →</button>
     </form>
 
     <button id="btnInstalar" class="btn-instalar" style="display:none">
@@ -56,9 +129,12 @@
     {% endif %}
   </div>
 
-  <!-- GUÍA DE ASIENTOS -->
+  <!-- GUÍA DE ASIENTOS CON TOOLTIP -->
   <div class="guia-asientos">
     <h3>Guía de Asientos</h3>
+    <p style="font-size:12px;color:rgba(245,234,216,0.38);text-align:center;margin-bottom:12px;letter-spacing:0.3px">
+      Toca tu asiento para seleccionarlo
+    </p>
     <div class="guia-scroll-wrap">
       <div class="guia-interior">
         <div class="escenario">Escenario</div>
@@ -71,7 +147,14 @@
               {% for num in range(bloque_num*4+1, bloque_num*4+5) %}
               <div class="punto-wrapper">
                 <div class="numero">{{ num }}</div>
-                <div class="punto"></div>
+                <div class="punto"
+                     data-seat="{{ fila }}{{ num }}"
+                     onclick="abrirTip(this, '{{ fila }}{{ num }}')">
+                </div>
+                <div class="seat-tip" id="tip-{{ fila }}{{ num }}">
+                  <p>Asiento {{ fila }}{{ num }}</p>
+                  <button class="btn-elegir" onclick="elegirAsiento('{{ fila }}{{ num }}', event)">Elegir</button>
+                </div>
               </div>
               {% endfor %}
             </div>
@@ -85,6 +168,49 @@
   </div>
 
 <script>
+/* ── TOOLTIP DEL MAPA ── */
+var puntoActivo = null;
+
+function abrirTip(el, seatId) {
+  if (puntoActivo === el) { cerrarTips(); return; }
+  cerrarTips();
+  el.classList.add('activo');
+  puntoActivo = el;
+  var tip = document.getElementById('tip-' + seatId);
+  if (tip) tip.style.display = 'block';
+}
+
+function cerrarTips() {
+  document.querySelectorAll('.punto.activo').forEach(function(p) { p.classList.remove('activo'); });
+  document.querySelectorAll('.seat-tip').forEach(function(t) { t.style.display = 'none'; });
+  puntoActivo = null;
+}
+
+function elegirAsiento(seatId, evt) {
+  evt.stopPropagation();
+  var input = document.getElementById('inputAsiento');
+  if (input) {
+    input.value = seatId.toUpperCase();
+    // Resaltar brevemente el input
+    input.classList.add('resaltado');
+    setTimeout(function() { input.classList.remove('resaltado'); }, 900);
+  }
+  cerrarTips();
+  // Scroll al botón de entrar
+  var btn = document.getElementById('btnEntrar');
+  if (btn) {
+    btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    btn.style.boxShadow = '0 0 0 3px rgba(194,121,65,0.45)';
+    setTimeout(function() { btn.style.boxShadow = ''; }, 1600);
+  }
+}
+
+// Cerrar tooltip al tocar fuera
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.punto-wrapper')) cerrarTips();
+});
+
+/* ── PWA ── */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/static/sw.js').catch(function(e) { console.log('SW:', e); });
 }

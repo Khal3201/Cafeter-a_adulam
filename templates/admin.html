@@ -2,26 +2,53 @@
 <html lang="es">
 <head>
   <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#4e3526">
+  <meta name="theme-color" content="#6b3e26">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="/static/icon-192.jpg">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administración – Cafetería Adulam</title>
+  <title>Administración – Cafetería Mi Refugio</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* ── PRECIOS DOBLES EN ADMIN ── */
+    .precio-doble-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .precio-chico-toggle {
+      margin: 8px 0 2px;
+    }
+    .precio-badge-doble {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+    }
+    .precio-badge-sm {
+      font-size: 12px;
+      color: var(--cafe);
+      font-weight: bold;
+    }
+    .precio-badge-sm span {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+    /* Ocultar campo precio chico cuando no aplica */
+    .precio-chico-field { display: none; }
+    .precio-chico-field.visible { display: block; }
+  </style>
 </head>
 <body>
 <div class="admin-wrap">
 
   <!-- ENCABEZADO -->
   <div class="admin-header">
-    <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:22px">☕</span>
-      <div>
-        <strong>Panel de Administración</strong>
-        <p style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:1px;font-weight:400">Cafetería Adulam</p>
-      </div>
+    <div>
+      <span class="logo-icon-sm">☕</span>
+      <strong>Panel de Administración</strong>
     </div>
     <div style="display:flex;align-items:center;gap:12px">
       <span id="badge-pedidos" class="badge-notif" style="display:none"></span>
@@ -43,15 +70,9 @@
     <button class="tab-btn" onclick="showTab('config', this)">Config</button>
   </div>
 
-  <!-- ════════════════════════════════════════════════════════
-       TAB: PEDIDOS
-  ════════════════════════════════════════════════════════ -->
+  <!-- TAB: PEDIDOS -->
   <div id="tab-pedidos" class="tab-content active" data-total="{{ pedidos|length }}">
-    <h3 class="tab-title">Pedidos activos
-      <span style="font-size:14px;font-family:'DM Sans',sans-serif;font-weight:400;color:var(--text-muted)">
-        ({{ pedidos|length }})
-      </span>
-    </h3>
+    <h3 class="tab-title">Pedidos activos ({{ pedidos|length }})</h3>
     <p class="tab-subtitle">Se actualiza automáticamente cada 5 segundos.</p>
 
     {% if pedidos %}
@@ -78,23 +99,18 @@
         </div>
         <div class="pedido-acciones">
           {% if pedido["estado"] == "pendiente" %}
-            <a href="/preparar/{{ pedido['id'] }}" class="btn-preparar">En preparación</a>
+            <a href="/preparar/{{ pedido['id'] }}" class="btn-preparar">Preparando</a>
           {% endif %}
-          <a href="{{ url_for('completar', id=pedido['id']) }}" class="btn-completar">✓ Completar</a>
+          <a href="{{ url_for('completar', id=pedido['id']) }}" class="btn-completar">Completar</a>
         </div>
       </div>
       {% endfor %}
     {% else %}
-      <div class="empty-state">
-        <p style="font-size:32px;margin-bottom:12px">☕</p>
-        <p>No hay pedidos activos</p>
-      </div>
+      <div class="empty-state"><p>No hay pedidos activos</p></div>
     {% endif %}
   </div>
 
-  <!-- ════════════════════════════════════════════════════════
-       TAB: PRODUCTOS
-  ════════════════════════════════════════════════════════ -->
+  <!-- TAB: PRODUCTOS -->
   <div id="tab-productos" class="tab-content">
     <h3 class="tab-title">Gestión de Productos</h3>
 
@@ -102,25 +118,42 @@
     <div class="admin-card">
       <h4>Nuevo producto</h4>
       <form action="/admin/producto/nuevo" method="POST">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Nombre</label>
-            <input type="text" name="nombre" placeholder="Ej: Té helado" required>
-          </div>
-          <div class="form-group">
-            <label>Precio ($)</label>
-            <input type="number" name="precio" min="1" step="0.5" placeholder="25" required>
-          </div>
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" name="nombre" placeholder="Ej: Latte de vainilla" required>
         </div>
+
         <div class="form-group">
           <label>Categoría</label>
           <select name="categoria">
-            <option>Café</option>
-            <option>Smoothie</option>
-            <option>Snack</option>
-            <option>Otro</option>
+            <option value="Caliente">☕ Caliente</option>
+            <option value="Frío">🧊 Frío</option>
+            <option value="Frappé">🥤 Frappé</option>
+            <option value="Smoothie">🍓 Smoothie</option>
+            <option value="Snack">🥐 Snack</option>
+            <option value="Otro">✨ Otro</option>
           </select>
         </div>
+
+        <!-- Precio Grande siempre requerido -->
+        <div class="form-group">
+          <label>Precio Grande ($) <small style="color:var(--text-muted)">— también usado como precio único</small></label>
+          <input type="number" name="precio_grande" min="1" step="0.5" placeholder="55" required>
+        </div>
+
+        <!-- Precio Chico opcional -->
+        <div class="form-group precio-chico-toggle">
+          <label class="check-label">
+            <input type="checkbox" id="new_chkChico"
+                   onchange="togglePrecioChico('new_precioChico', this.checked)">
+            Este producto tiene tamaño Chico (precio diferente)
+          </label>
+        </div>
+        <div class="form-group precio-chico-field" id="new_precioChico">
+          <label>Precio Chico ($)</label>
+          <input type="number" name="precio_chico" min="1" step="0.5" placeholder="40">
+        </div>
+
         <div class="form-checks">
           <label class="check-label">
             <input type="checkbox" name="tiene_sabores" id="new_chkSabores"
@@ -132,26 +165,26 @@
                    onchange="toggleField('new_inputLeche', this.checked)">
             Tiene opciones de leche
           </label>
-          <div class="checks-row">
-            <label class="check-group">
-              <input type="checkbox" name="tiene_hielo" checked> Pregunta cantidad de hielo
-            </label>
-            <label class="check-group">
-              <input type="checkbox" name="tiene_azucar" checked> Pregunta cantidad de azúcar
-            </label>
-          </div>
+          <label class="check-label">
+            <input type="checkbox" name="tiene_hielo" checked> Pregunta cantidad de hielo
+          </label>
+          <label class="check-label">
+            <input type="checkbox" name="tiene_azucar" checked> Pregunta cantidad de azúcar
+          </label>
           <label class="check-label">
             <input type="checkbox" name="tiene_cafe"> Pregunta cantidad de café
           </label>
         </div>
+
         <div class="form-group" id="new_inputSabores" style="display:none">
           <label>Sabores disponibles (separados por coma)</label>
-          <input type="text" name="sabores" placeholder="Ej: Fresa, Mango, Durazno">
+          <input type="text" name="sabores" placeholder="Ej: Vainilla, Caramelo, Avellana">
         </div>
         <div class="form-group" id="new_inputLeche" style="display:none">
           <label>Tipos de leche (separados por coma)</label>
           <input type="text" name="leches" placeholder="Ej: Entera, Deslactosada, De almendra">
         </div>
+
         <button type="submit">Crear producto</button>
       </form>
     </div>
@@ -161,42 +194,64 @@
     <div class="admin-card producto-card {% if not producto.activo %}inactivo{% endif %}">
       <div class="producto-header">
         <div>
-          <strong style="font-size:15px;font-weight:700;color:var(--text)">{{ producto.nombre }}</strong>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px">
-            <span class="badge">{{ producto.categoria }}</span>
-            {% if not producto.activo %}<span class="badge badge-off">Inactivo</span>{% endif %}
-          </div>
+          <strong>{{ producto.nombre }}</strong>
+          <span class="badge">{{ producto.categoria }}</span>
+          {% if not producto.activo %}<span class="badge badge-off">Inactivo</span>{% endif %}
         </div>
-        <span class="precio-badge">${{ "%.0f"|format(producto.precio) }}</span>
+        <div class="precio-badge-doble">
+          {% if producto.precio_chico %}
+            <span class="precio-badge-sm">Grande ${{ "%.0f"|format(producto.precio_grande) }}</span>
+            <span class="precio-badge-sm">Chico ${{ "%.0f"|format(producto.precio_chico) }}</span>
+          {% else %}
+            <span class="precio-badge">${{ "%.0f"|format(producto.precio_grande) }}</span>
+          {% endif %}
+        </div>
       </div>
       <div class="flags">
         {% if producto.tiene_sabores %}<span class="flag">🍓 Sabores</span>{% endif %}
-        {% if producto.tiene_leche   %}<span class="flag">🥛 Leche</span>{% endif %}
-        {% if producto.tiene_hielo   %}<span class="flag">🧊 Hielo</span>{% endif %}
-        {% if producto.tiene_azucar  %}<span class="flag">🍬 Azúcar</span>{% endif %}
-        {% if producto.tiene_cafe    %}<span class="flag">☕ Café</span>{% endif %}
+        {% if producto.tiene_leche %}<span class="flag">🥛 Leche</span>{% endif %}
+        {% if producto.tiene_hielo %}<span class="flag">🧊 Hielo</span>{% endif %}
+        {% if producto.tiene_azucar %}<span class="flag">🍬 Azúcar</span>{% endif %}
+        {% if producto.tiene_cafe %}<span class="flag">☕ Café</span>{% endif %}
       </div>
       <details class="edit-details">
         <summary>Editar producto</summary>
         <form action="/admin/producto/editar/{{ producto.id }}" method="POST" class="edit-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nombre</label>
-              <input type="text" name="nombre" value="{{ producto.nombre }}" required>
-            </div>
-            <div class="form-group">
-              <label>Precio ($)</label>
-              <input type="number" name="precio" value="{{ producto.precio }}" min="1" step="0.5" required>
-            </div>
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" name="nombre" value="{{ producto.nombre }}" required>
           </div>
+
           <div class="form-group">
             <label>Categoría</label>
             <select name="categoria">
-              {% for cat in ['Café','Smoothie','Snack','Otro'] %}
+              {% for cat in ['Caliente','Frío','Frappé','Smoothie','Snack','Otro'] %}
                 <option {% if producto.categoria == cat %}selected{% endif %}>{{ cat }}</option>
               {% endfor %}
             </select>
           </div>
+
+          <div class="form-group">
+            <label>Precio Grande ($)</label>
+            <input type="number" name="precio_grande" value="{{ producto.precio_grande }}" min="1" step="0.5" required>
+          </div>
+
+          <div class="form-group precio-chico-toggle">
+            <label class="check-label">
+              <input type="checkbox" id="edit_chkChico_{{ producto.id }}"
+                     {% if producto.precio_chico %}checked{% endif %}
+                     onchange="togglePrecioChico('edit_precioChico_{{ producto.id }}', this.checked)">
+              Tiene tamaño Chico
+            </label>
+          </div>
+          <div class="form-group precio-chico-field {% if producto.precio_chico %}visible{% endif %}"
+               id="edit_precioChico_{{ producto.id }}">
+            <label>Precio Chico ($)</label>
+            <input type="number" name="precio_chico"
+                   value="{{ producto.precio_chico if producto.precio_chico else '' }}"
+                   min="1" step="0.5">
+          </div>
+
           <div class="form-checks">
             <label class="check-label">
               <input type="checkbox" name="tiene_sabores" {% if producto.tiene_sabores %}checked{% endif %}>
@@ -235,9 +290,7 @@
     {% endfor %}
   </div>
 
-  <!-- ════════════════════════════════════════════════════════
-       TAB: OPCIONES
-  ════════════════════════════════════════════════════════ -->
+  <!-- TAB: OPCIONES -->
   <div id="tab-opciones" class="tab-content">
     <h3 class="tab-title">Gestión de Opciones</h3>
     <p class="tab-subtitle">Activa o desactiva opciones cuando no haya stock.</p>
@@ -301,24 +354,21 @@
     {% endif %}
   </div>
 
-  <!-- ════════════════════════════════════════════════════════
-       TAB: ARQUEO
-  ════════════════════════════════════════════════════════ -->
+  <!-- TAB: ARQUEO -->
   <div id="tab-arqueo" class="tab-content">
     <h3 class="tab-title">Arqueo de Caja</h3>
 
-    <!-- Estadísticas del día -->
     <div class="arqueo-hoy">
       <div class="arqueo-stat">
         <span class="stat-label">Ventas hoy</span>
         <span class="stat-valor">${{ "%.0f"|format(arqueo_hoy.total_ventas if arqueo_hoy else 0) }}</span>
       </div>
       <div class="arqueo-stat">
-        <span class="stat-label">Pedidos</span>
+        <span class="stat-label">Pedidos hoy</span>
         <span class="stat-valor">{{ arqueo_hoy.num_pedidos if arqueo_hoy else 0 }}</span>
       </div>
       <div class="arqueo-stat">
-        <span class="stat-label">Promedio</span>
+        <span class="stat-label">Ticket prom.</span>
         <span class="stat-valor">
           {% if arqueo_hoy and arqueo_hoy.num_pedidos > 0 %}
             ${{ "%.0f"|format(arqueo_hoy.total_ventas / arqueo_hoy.num_pedidos) }}
@@ -327,7 +377,6 @@
       </div>
     </div>
 
-    <!-- Lo más vendido hoy -->
     {% if desglose %}
     <div class="admin-card">
       <h4>Lo más vendido hoy</h4>
@@ -351,19 +400,17 @@
     </div>
     {% endif %}
 
-    <!-- Nota del día -->
     {% if arqueo_hoy %}
     <div class="admin-card">
       <h4>Nota del día ({{ hoy }})</h4>
       <form action="/admin/arqueo/nota" method="POST">
         <input type="hidden" name="fecha" value="{{ hoy }}">
-        <textarea name="notas" placeholder="Observaciones, incidencias, notas de inventario...">{{ arqueo_hoy.notas or '' }}</textarea>
+        <textarea name="notas" placeholder="Observaciones, incidencias...">{{ arqueo_hoy.notas or '' }}</textarea>
         <button type="submit">Guardar nota</button>
       </form>
     </div>
     {% endif %}
 
-    <!-- Reinicio -->
     <div class="admin-card reiniciar-card">
       <h4>Reiniciar para pruebas</h4>
       <p class="tab-subtitle">Borra todos los pedidos y reinicia el contador del día. Solo para pruebas.</p>
@@ -373,24 +420,20 @@
       </form>
     </div>
 
-    <!-- Limpiar historial -->
     <div class="admin-card">
       <h4>Limpiar historial</h4>
-      <p class="tab-subtitle">Oculta todos los registros anteriores a hoy. Los datos no se borran de la base de datos.</p>
+      <p class="tab-subtitle">Oculta los registros anteriores a hoy. Los datos no se borran de la base de datos.</p>
       <form action="/admin/arqueo/limpiar_historial" method="POST"
             onsubmit="return confirm('¿Ocultar todo el historial anterior a hoy?')">
         <button type="submit" class="btn-limpiar-historial">Limpiar historial visible</button>
       </form>
     </div>
 
-    <!-- Historial -->
     <div class="arqueo-filtro-wrap">
       <h4 class="tab-title" style="margin:0">Historial</h4>
       <div class="arqueo-filtro">
-        <span class="filtro-label">Días de evento</span>
-        <button id="btnToggleEventos" class="btn-toggle-eventos activo" onclick="toggleEventos()">
-          Ocultar
-        </button>
+        <span class="filtro-label">Días de evento (Vie/Sáb)</span>
+        <button id="btnToggleEventos" class="btn-toggle-eventos activo" onclick="toggleEventos()">Ocultar</button>
       </div>
     </div>
     <p class="tab-subtitle">Solo se muestran miércoles, viernes, sábados y domingos.</p>
@@ -407,9 +450,7 @@
             <td>{{ a.fecha }}</td>
             <td>
               {{ a.dia_nombre }}
-              {% if a.dia_semana in [4, 5] %}
-                <span class="badge-evento">Evento</span>
-              {% endif %}
+              {% if a.dia_semana in [4, 5] %}<span class="badge-evento">Evento</span>{% endif %}
             </td>
             <td>{{ a.num_pedidos }}</td>
             <td>${{ "%.0f"|format(a.total_ventas) }}</td>
@@ -424,9 +465,7 @@
     {% endif %}
   </div>
 
-  <!-- ════════════════════════════════════════════════════════
-       TAB: ASIENTOS
-  ════════════════════════════════════════════════════════ -->
+  <!-- TAB: ASIENTOS -->
   <div id="tab-asientos" class="tab-content">
     <h3 class="tab-title">Mapa de Asientos</h3>
     <p class="tab-subtitle">Distribución del salón por sección.</p>
@@ -454,7 +493,7 @@
             </div>
           </div>
         </div>
-        <p class="scroll-hint">← Desliza para ver todos los asientos →</p>
+        <p class="scroll-hint">Desliza para ver todos los asientos</p>
         <div class="leyenda-asientos">
           <span class="leyenda-item"><span class="punto-leyenda"></span> Asiento disponible</span>
         </div>
@@ -462,9 +501,7 @@
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════════════
-       TAB: CONFIG
-  ════════════════════════════════════════════════════════ -->
+  <!-- TAB: CONFIG -->
   <div id="tab-config" class="tab-content">
     <h3 class="tab-title">Configuración de la App</h3>
 
@@ -473,11 +510,8 @@
         <div>
           <h4>Estado de la app</h4>
           <p class="tab-subtitle" style="margin:0">
-            {% if app_activa %}
-              La app está activa. Los usuarios pueden acceder normalmente.
-            {% else %}
-              La app está desactivada. Los usuarios ven el mensaje configurado.
-            {% endif %}
+            {% if app_activa %}La app está activa. Los usuarios pueden acceder normalmente.
+            {% else %}La app está desactivada. Los usuarios ven el mensaje de abajo.{% endif %}
           </p>
         </div>
         <span class="estado-app-badge {% if app_activa %}badge-on{% else %}badge-off{% endif %}">
@@ -489,16 +523,14 @@
     {% if app_activa %}
     <div class="admin-card">
       <h4>Desactivar la app</h4>
-      <p class="tab-subtitle">Los usuarios que intenten acceder verán el mensaje que escribas aquí en lugar del menú.</p>
+      <p class="tab-subtitle">Los usuarios verán el mensaje que escribas aquí en lugar del menú.</p>
       <form action="/admin/config/desactivar" method="POST">
         <div class="form-group">
           <label>Mensaje para los usuarios</label>
-          <textarea name="mensaje" placeholder="Ej: La cafetería no estará disponible hoy. Volvemos el próximo miércoles." required>{{ mensaje_inactiva or '' }}</textarea>
+          <textarea name="mensaje" placeholder="Ej: La cafetería no estará disponible hoy." required>{{ mensaje_inactiva or '' }}</textarea>
         </div>
         <button type="submit" class="btn-danger-full"
-                onclick="return confirm('¿Desactivar la app? Los usuarios no podrán hacer pedidos.')">
-          Desactivar app
-        </button>
+                onclick="return confirm('¿Desactivar la app?')">Desactivar app</button>
       </form>
     </div>
     {% else %}
@@ -524,6 +556,19 @@ function toggleField(fieldId, show) {
   if (el) el.style.display = show ? 'block' : 'none';
 }
 
+function togglePrecioChico(fieldId, show) {
+  var el = document.getElementById(fieldId);
+  if (!el) return;
+  if (show) {
+    el.classList.add('visible');
+  } else {
+    el.classList.remove('visible');
+    // Limpiar valor para que no se envíe
+    var inp = el.querySelector('input');
+    if (inp) inp.value = '';
+  }
+}
+
 function showTab(name, btn) {
   document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -542,45 +587,31 @@ function toggleEventos() {
   btn.classList.toggle('activo', eventosVisibles);
 }
 
-// --- Audio para notificaciones ---
+/* ── Audio / notificaciones ── */
 var sonidoCtx = null;
-
 function iniciarAudio() {
-  if (!sonidoCtx) {
-    sonidoCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (sonidoCtx.state === 'suspended') {
-    sonidoCtx.resume();
-  }
+  if (!sonidoCtx) sonidoCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (sonidoCtx.state === 'suspended') sonidoCtx.resume();
 }
-
 document.addEventListener('click',      iniciarAudio, { once: false });
 document.addEventListener('touchstart', iniciarAudio, { once: false });
 
-function tocar(frecuencia, inicio, duracion) {
-  var osc  = sonidoCtx.createOscillator();
-  var gain = sonidoCtx.createGain();
-  osc.connect(gain);
-  gain.connect(sonidoCtx.destination);
+function tocar(f, t, d) {
+  var osc = sonidoCtx.createOscillator();
+  var g   = sonidoCtx.createGain();
+  osc.connect(g); g.connect(sonidoCtx.destination);
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(frecuencia, inicio);
-  gain.gain.setValueAtTime(0.5, inicio);
-  gain.gain.exponentialRampToValueAtTime(0.001, inicio + duracion);
-  osc.start(inicio);
-  osc.stop(inicio + duracion);
+  osc.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(0.5, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + d);
+  osc.start(t); osc.stop(t + d);
 }
-
 function reproducirBeep() {
   try {
     iniciarAudio();
-    if (sonidoCtx.state === 'suspended') {
-      sonidoCtx.resume().then(function() { _beep(); });
-    } else {
-      _beep();
-    }
+    if (sonidoCtx.state === 'suspended') { sonidoCtx.resume().then(_beep); } else { _beep(); }
   } catch(e) {}
 }
-
 function _beep() {
   var t = sonidoCtx.currentTime;
   tocar(660,  t,        0.18);
@@ -597,30 +628,24 @@ setInterval(function() {
   fetch('/admin/conteo_pedidos')
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      var nueva = data.total;
-      var badge = document.getElementById('badge-pedidos');
+      var nueva  = data.total;
+      var badge  = document.getElementById('badge-pedidos');
 
       if (nueva > 0) {
-        badge.textContent = nueva + ' nuevo' + (nueva > 1 ? 's' : '');
+        badge.textContent   = nueva + ' nuevo' + (nueva > 1 ? 's' : '');
         badge.style.display = 'inline-block';
-        document.title = '(' + nueva + ') Panel Admin';
+        document.title      = '(' + nueva + ') Panel Admin';
       } else {
         badge.style.display = 'none';
-        document.title = 'Administración – Cafetería Adulam';
+        document.title      = 'Administración – Cafetería Mi Refugio';
       }
 
-      if (nueva > cantidadAnterior) {
-        reproducirBeep();
-      }
+      if (nueva > cantidadAnterior) reproducirBeep();
       cantidadAnterior = nueva;
 
-      if (nueva !== parseInt(pedidosTab.dataset.total, 10)) {
-        location.reload();
-      }
+      if (nueva !== parseInt(pedidosTab.dataset.total, 10)) location.reload();
     })
-    .catch(function() {
-      location.reload();
-    });
+    .catch(function() { location.reload(); });
 }, 5000);
 </script>
 </body>

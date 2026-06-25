@@ -14,8 +14,8 @@ app.secret_key = "cafeteria_adulam_secret_key"
 # La sesion de admin dura 7 dias sin necesidad de volver a iniciar sesion
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 
-ADMIN_NAME = "admin"
-ADMIN_SEAT = "admin"
+ADMIN_NAME = "soco"
+ADMIN_SEAT = "soco"
 
 # Clave de emergencia para reactivar la app desde /reactivar sin sesion activa
 CLAVE_REACTIVAR = "adulam2026"
@@ -140,9 +140,9 @@ def _sembrar_menu_v2(conn):
         ("Frappé de Sabor",  40, 50, 40, "Frappé",   1, 0, 1, 1, 0, SABORES_FRAPPE),
         # SMOOTHIES
         ("Smoothie",         30, 40, 30, "Smoothie", 1, 0, 1, 0, 0, SABORES_SMOOTHIE),
-        # SNACK
-        ("Galleta",          15, None, None, "Snack", 0, 0, 0, 0, 0, None),
-        ("Muffin",           30, None, None, "Snack", 0, 0, 0, 0, 0, None),
+        # SNACK (precio único → precio_grande = precio, precio_chico = None)
+        ("Galleta",          15, 15, None, "Snack", 0, 0, 0, 0, 0, None),
+        ("Muffin",           30, 30, None, "Snack", 0, 0, 0, 0, 0, None),
     ]
 
     for p in productos:
@@ -244,38 +244,38 @@ def login():
     nombre  = request.form["nombre"].strip().lower()
     asiento = request.form["asiento"].strip().lower()
 
-    if nombre == ADMIN_NAME and asiento == ADMIN_SEAT:
+    # Admin primero — sin restricciones de formato
+    if (nombre == ADMIN_NAME and asiento == ADMIN_SEAT) :
         session.permanent = True
         session["admin"] = True
         return redirect(url_for("admin"))
-
-    if get_config('app_activa', '1') != '1':
+    elif (get_config('app_activa', '1') != '1'):
         flash(get_config('mensaje_inactiva', 'La app no está disponible en este momento.'))
         return redirect(url_for("home"))
-    elif not re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+", nombre):
+    elif not (re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+", nombre)):
         flash("El nombre solo puede contener letras.")
         return redirect(url_for("home"))
-    elif len(asiento) > 3:
+    elif (len(asiento) > 3):
         flash("El asiento no puede tener más de 3 caracteres.")
         return redirect(url_for("home"))
-    elif not re.fullmatch(r"[A-Za-z0-9]+", asiento):
+    elif not (re.fullmatch(r"[A-Za-z0-9]+", asiento)):
         flash("El asiento solo puede contener letras y números.")
         return redirect(url_for("home"))
-    else:
-        conn = get_db_connection()
-        pedido_activo = conn.execute(
-            "SELECT id FROM pedidos WHERE asiento = ? AND estado IN ('pendiente', 'preparando')",
-            (asiento,)
-        ).fetchone()
-        conn.close()
 
-        if pedido_activo:
-            flash("Ya tienes un pedido en curso para este asiento. Espera a que te lo entreguen.")
-            return redirect(url_for("home"))
+    conn = get_db_connection()
+    pedido_activo = conn.execute(
+        "SELECT id FROM pedidos WHERE asiento = ? AND estado IN ('pendiente', 'preparando')",
+        (asiento,)
+    ).fetchone()
+    conn.close()
 
-        session["nombre"] = nombre
-        session["asiento"] = asiento
-        return redirect(url_for("panel"))
+    if pedido_activo:
+        flash("Ya tienes un pedido en curso para este asiento. Espera a que te lo entreguen.")
+        return redirect(url_for("home"))
+
+    session["nombre"] = nombre
+    session["asiento"] = asiento
+    return redirect(url_for("panel"))
 
 
 @app.route("/panel")
@@ -284,7 +284,19 @@ def panel():
         return redirect(url_for("home"))
 
     conn = get_db_connection()
-    productos = conn.execute("SELECT * FROM productos WHERE activo = 1 ORDER BY categoria, nombre").fetchall()
+    productos = conn.execute("""
+        SELECT * FROM productos WHERE activo = 1
+        ORDER BY
+            CASE categoria
+                WHEN 'Caliente' THEN 1
+                WHEN 'Frío'     THEN 2
+                WHEN 'Frappé'   THEN 3
+                WHEN 'Smoothie' THEN 4
+                WHEN 'Snack'    THEN 5
+                ELSE 6
+            END,
+            nombre
+    """).fetchall()
     opciones  = conn.execute("SELECT * FROM opciones_producto WHERE disponible = 1").fetchall()
     conn.close()
 
@@ -435,7 +447,19 @@ def admin():
 
     conn      = get_db_connection()
     pedidos   = conn.execute("SELECT * FROM pedidos WHERE estado IN ('pendiente','preparando') ORDER BY fecha DESC").fetchall()
-    productos = conn.execute("SELECT * FROM productos ORDER BY categoria, nombre").fetchall()
+    productos = conn.execute("""
+        SELECT * FROM productos
+        ORDER BY
+            CASE categoria
+                WHEN 'Caliente' THEN 1
+                WHEN 'Frío'     THEN 2
+                WHEN 'Frappé'   THEN 3
+                WHEN 'Smoothie' THEN 4
+                WHEN 'Snack'    THEN 5
+                ELSE 6
+            END,
+            nombre
+    """).fetchall()
     opciones  = conn.execute("""
         SELECT op.*, p.nombre as prod_nombre
         FROM opciones_producto op
