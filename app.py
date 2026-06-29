@@ -119,8 +119,8 @@ def _sembrar_menu_v2(conn):
     conn.execute("DELETE FROM sqlite_sequence WHERE name='productos'")
     conn.execute("DELETE FROM sqlite_sequence WHERE name='opciones_producto'")
 
-    SABORES_LATTE = "Crema Irlandesa,Caramelo,Vainilla,Avellana,Vino de Café,Té Chai,Matcha"
-    SABORES_FRAPPE = "Crema Irlandesa,Caramelo,Vainilla,Avellana,Vino de Café,Té Chai,Matcha"
+    SABORES_LATTE   = "Crema Irlandesa,Caramelo,Vainilla,Avellana,Vino de Café,Té Chai,Matcha"
+    SABORES_FRAPPE  = "Crema Irlandesa,Caramelo,Vainilla,Avellana,Vino de Café,Té Chai,Matcha"
     SABORES_SMOOTHIE = "Fresa,Frambuesa,Mango,Frutos Rojos"
 
     # (nombre, precio_base, precio_grande, precio_chico, categoria,
@@ -140,9 +140,9 @@ def _sembrar_menu_v2(conn):
         ("Frappé de Sabor",  40, 50, 40, "Frappé",   1, 0, 1, 1, 0, SABORES_FRAPPE),
         # SMOOTHIES
         ("Smoothie",         30, 40, 30, "Smoothie", 1, 0, 1, 0, 0, SABORES_SMOOTHIE),
-        # SNACK (precio único → precio_grande = precio, precio_chico = None)
-        ("Galleta",          15, 15, None, "Snack", 0, 0, 0, 0, 0, None),
-        ("Muffin",           30, 30, None, "Snack", 0, 0, 0, 0, 0, None),
+        # SNACK
+        ("Galleta",          15, None, None, "Snack", 0, 0, 0, 0, 0, None),
+        ("Muffin",           30, None, None, "Snack", 0, 0, 0, 0, 0, None),
     ]
 
     for p in productos:
@@ -244,38 +244,38 @@ def login():
     nombre  = request.form["nombre"].strip().lower()
     asiento = request.form["asiento"].strip().lower()
 
-    # Admin primero — sin restricciones de formato
-    if (nombre == ADMIN_NAME and asiento == ADMIN_SEAT) :
+    if nombre == ADMIN_NAME and asiento == ADMIN_SEAT:
         session.permanent = True
         session["admin"] = True
         return redirect(url_for("admin"))
-    elif (get_config('app_activa', '1') != '1'):
+
+    if get_config('app_activa', '1') != '1':
         flash(get_config('mensaje_inactiva', 'La app no está disponible en este momento.'))
         return redirect(url_for("home"))
-    elif not (re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+", nombre)):
+    elif not re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+", nombre):
         flash("El nombre solo puede contener letras.")
         return redirect(url_for("home"))
-    elif (len(asiento) > 3):
+    elif len(asiento) > 3:
         flash("El asiento no puede tener más de 3 caracteres.")
         return redirect(url_for("home"))
-    elif not (re.fullmatch(r"[A-Za-z0-9]+", asiento)):
+    elif not re.fullmatch(r"[A-Za-z0-9]+", asiento):
         flash("El asiento solo puede contener letras y números.")
         return redirect(url_for("home"))
+    else:
+        conn = get_db_connection()
+        pedido_activo = conn.execute(
+            "SELECT id FROM pedidos WHERE asiento = ? AND estado IN ('pendiente', 'preparando')",
+            (asiento,)
+        ).fetchone()
+        conn.close()
 
-    conn = get_db_connection()
-    pedido_activo = conn.execute(
-        "SELECT id FROM pedidos WHERE asiento = ? AND estado IN ('pendiente', 'preparando')",
-        (asiento,)
-    ).fetchone()
-    conn.close()
+        if pedido_activo:
+            flash("Ya tienes un pedido en curso para este asiento. Espera a que te lo entreguen.")
+            return redirect(url_for("home"))
 
-    if pedido_activo:
-        flash("Ya tienes un pedido en curso para este asiento. Espera a que te lo entreguen.")
-        return redirect(url_for("home"))
-
-    session["nombre"] = nombre
-    session["asiento"] = asiento
-    return redirect(url_for("panel"))
+        session["nombre"] = nombre
+        session["asiento"] = asiento
+        return redirect(url_for("panel"))
 
 
 @app.route("/panel")
@@ -284,19 +284,7 @@ def panel():
         return redirect(url_for("home"))
 
     conn = get_db_connection()
-    productos = conn.execute("""
-        SELECT * FROM productos WHERE activo = 1
-        ORDER BY
-            CASE categoria
-                WHEN 'Caliente' THEN 1
-                WHEN 'Frío'     THEN 2
-                WHEN 'Frappé'   THEN 3
-                WHEN 'Smoothie' THEN 4
-                WHEN 'Snack'    THEN 5
-                ELSE 6
-            END,
-            nombre
-    """).fetchall()
+    productos = conn.execute("SELECT * FROM productos WHERE activo = 1 ORDER BY categoria, nombre").fetchall()
     opciones  = conn.execute("SELECT * FROM opciones_producto WHERE disponible = 1").fetchall()
     conn.close()
 
@@ -412,6 +400,54 @@ def pedido_exitoso_post():
     return redirect(url_for("home"))
 
 
+@app.route("/cancelar_pedido", methods=["POST"])
+def cancelar_pedido():
+    """Cancelación por el cliente: elimina el pedido del panel sin tocar el arqueo."""
+    asiento = session.get("ultimo_asiento")
+    if not asiento:
+        return jsonify({"ok": False, "msg": "Sin sesión activa"})
+    conn   = get_db_connection()
+    pedido = conn.execute(
+        "SELECT id, estado FROM pedidos WHERE asiento = ? AND estado = 'pendiente' ORDER BY fecha DESC LIMIT 1",
+        (asiento,)
+    ).fetchone()
+    if not pedido:
+        conn.close()
+        return jsonify({"ok": False, "msg": "El pedido ya está en preparación o no existe"})
+    conn.execute("DELETE FROM pedidos WHERE id = ?", (pedido["id"],))
+    conn.commit()
+    conn.close()
+    session.pop("ultimo_asiento", None)
+    session.pop("ultimo_nombre",  None)
+    return jsonify({"ok": True})
+
+
+@app.route("/editar_pedido", methods=["POST"])
+def editar_pedido():
+    """El cliente edita su pedido: cancela silenciosamente y restaura sesión para volver al panel."""
+    asiento = session.get("ultimo_asiento")
+    nombre  = session.get("ultimo_nombre")
+    if not asiento:
+        return jsonify({"ok": False, "msg": "Sin sesión activa"})
+    conn   = get_db_connection()
+    pedido = conn.execute(
+        "SELECT id, estado FROM pedidos WHERE asiento = ? AND estado = 'pendiente' ORDER BY fecha DESC LIMIT 1",
+        (asiento,)
+    ).fetchone()
+    if not pedido:
+        conn.close()
+        return jsonify({"ok": False, "msg": "El pedido ya está en preparación y no se puede editar"})
+    conn.execute("DELETE FROM pedidos WHERE id = ?", (pedido["id"],))
+    conn.commit()
+    conn.close()
+    # Restaurar sesión para que /panel sea accesible
+    session["nombre"]  = nombre
+    session["asiento"] = asiento
+    session.pop("ultimo_asiento", None)
+    session.pop("ultimo_nombre",  None)
+    return jsonify({"ok": True})
+
+
 @app.route("/admin/conteo_pedidos")
 def conteo_pedidos():
     if not session.get("admin"):
@@ -447,19 +483,7 @@ def admin():
 
     conn      = get_db_connection()
     pedidos   = conn.execute("SELECT * FROM pedidos WHERE estado IN ('pendiente','preparando') ORDER BY fecha DESC").fetchall()
-    productos = conn.execute("""
-        SELECT * FROM productos
-        ORDER BY
-            CASE categoria
-                WHEN 'Caliente' THEN 1
-                WHEN 'Frío'     THEN 2
-                WHEN 'Frappé'   THEN 3
-                WHEN 'Smoothie' THEN 4
-                WHEN 'Snack'    THEN 5
-                ELSE 6
-            END,
-            nombre
-    """).fetchall()
+    productos = conn.execute("SELECT * FROM productos ORDER BY categoria, nombre").fetchall()
     opciones  = conn.execute("""
         SELECT op.*, p.nombre as prod_nombre
         FROM opciones_producto op
@@ -491,14 +515,13 @@ def admin():
             pass
 
     desglose = conn.execute("""
-    SELECT p.nombre, p.categoria, COUNT(*) as cantidad,
-           SUM(COALESCE(p.precio_grande, p.precio_chico, 0)) as subtotal
-    FROM pedidos ped
-    JOIN productos p ON instr(ped.articulos, p.nombre) > 0
-    WHERE date(ped.fecha) = ?
-    GROUP BY p.id
-    ORDER BY cantidad DESC
-""", (hoy,)).fetchall()
+        SELECT p.nombre, p.categoria, COUNT(*) as cantidad, SUM(p.precio) as subtotal
+        FROM pedidos ped
+        JOIN productos p ON instr(ped.articulos, p.nombre) > 0
+        WHERE date(ped.fecha) = ?
+        GROUP BY p.id
+        ORDER BY cantidad DESC
+    """, (hoy,)).fetchall()
 
     conn.close()
 
@@ -537,6 +560,28 @@ def preparar(id):
     return redirect(url_for("admin"))
 
 
+
+@app.route("/admin/pedido/cancelar/<int:id>")
+def pedido_cancelar_admin(id):
+    if not session.get("admin"):
+        return redirect(url_for("home"))
+    conn   = get_db_connection()
+    pedido = conn.execute("SELECT estado, total, fecha FROM pedidos WHERE id = ?", (id,)).fetchone()
+    if pedido and pedido["estado"] == "pendiente":
+        fecha_pedido = pedido["fecha"][:10]
+        conn.execute(
+            "UPDATE arqueo SET total_ventas = total_ventas - ?, num_pedidos = num_pedidos - 1 WHERE fecha = ?",
+            (pedido["total"] or 0, fecha_pedido)
+        )
+        conn.execute("DELETE FROM pedidos WHERE id = ?", (id,))
+        conn.commit()
+        flash("Pedido cancelado.")
+    else:
+        flash("No se puede cancelar un pedido en preparación.")
+    conn.close()
+    return redirect(url_for("admin"))
+
+
 # CRUD Productos
 
 CATEGORIAS = ['Caliente', 'Frío', 'Frappé', 'Smoothie', 'Snack', 'Otro']
@@ -551,7 +596,6 @@ def producto_nuevo():
     precio_chico  = request.form.get("precio_chico",  "").strip()
     categoria     = request.form["categoria"].strip()
 
-    # precio base = grande si existe, si no el campo precio
     precio_base = float(precio_grande) if precio_grande else float(request.form.get("precio", 0))
     pg = float(precio_grande) if precio_grande else None
     pc = float(precio_chico)  if precio_chico  else None
@@ -773,8 +817,8 @@ def reactivar():
     return render_template("reactivar.html", error=error)
 
 
-init_db()
 migrate_db()
+init_db()
 
 if __name__ == "__main__":
     print("Iniciando servidor Cafetería Mi Refugio...")

@@ -48,6 +48,22 @@
   <form action="/pedido_exitoso" method="POST" id="formVolver" style="margin-top:16px">
     <button type="submit" id="btnVolver">Volver al inicio</button>
   </form>
+
+  <div id="accionesWrap" style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+    <button id="btnEditar" onclick="editarPedido()"
+            style="width:100%;padding:12px;background:transparent;color:var(--caramel);
+                   border:1px solid rgba(194,121,65,0.4);border-radius:9px;
+                   font-family:'Jost',Arial,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+      ✎ Editar mi pedido
+    </button>
+    <button id="btnCancelar" onclick="cancelarPedido()"
+            style="width:100%;padding:12px;background:transparent;color:rgba(192,64,64,0.65);
+                   border:1px solid rgba(192,64,64,0.25);border-radius:9px;
+                   font-family:'Jost',Arial,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+      ✕ Cancelar mi pedido
+    </button>
+  </div>
+
 </div>
 
 <script>
@@ -75,6 +91,11 @@ var config = {
   }
 };
 
+function actualizarBtnAcciones(estado) {
+  var wrap = document.getElementById('accionesWrap');
+  if (wrap) wrap.style.display = (estado === 'pendiente') ? 'flex' : 'none';
+}
+
 function actualizarUI(estado) {
   var cfg  = config[estado] || config['entregado'];
   var card = document.getElementById('estadoCard');
@@ -82,6 +103,7 @@ function actualizarUI(estado) {
   document.getElementById('estadoTexto').textContent = cfg.texto;
   document.getElementById('estadoSub').textContent   = cfg.sub;
   card.className = 'estado-card ' + cfg.clase;
+  actualizarBtnAcciones(estado);
 }
 
 actualizarUI(estadoActual);
@@ -98,6 +120,38 @@ var intervalo = setInterval(function() {
     })
     .catch(function() {});
 }, 4000);
+
+function editarPedido() {
+  if (!confirm('¿Quieres editar tu pedido? Volverás al menú para hacerlo de nuevo.')) return;
+  fetch('/editar_pedido', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        clearInterval(intervalo);
+        window.location.href = '/panel';
+      } else {
+        alert(data.msg || 'No se pudo editar. El pedido ya está en preparación.');
+        actualizarBtnAcciones('preparando');
+      }
+    })
+    .catch(function() { alert('Error de red. Intenta de nuevo.'); });
+}
+
+function cancelarPedido() {
+  if (!confirm('¿Seguro que quieres cancelar tu pedido?')) return;
+  fetch('/cancelar_pedido', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        clearInterval(intervalo);
+        document.getElementById('formVolver').submit();
+      } else {
+        alert(data.msg || 'No se pudo cancelar. El pedido ya está en preparación.');
+        actualizarBtnAcciones('preparando');
+      }
+    })
+    .catch(function() { alert('Error de red. Intenta de nuevo.'); });
+}
 </script>
 </body>
 </html>

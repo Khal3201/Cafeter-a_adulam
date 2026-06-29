@@ -10,86 +10,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cafetería Adulam</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    /* ── MAPA CON TOOLTIP ── */
-    .punto-wrapper { position: relative; width: 14px; height: 14px; }
-    .punto {
-      width: 14px; height: 14px;
-      background: var(--cafe);
-      border-radius: 50%;
-      opacity: 0.7;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.15s, background 0.15s;
-    }
-    .punto:hover { opacity: 1; transform: scale(1.3); }
-    .punto.activo { background: var(--caramel); opacity: 1; transform: scale(1.3); }
-
-    /* Tooltip */
-    .seat-tip {
-      display: none;
-      position: absolute;
-      bottom: 22px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--roast);
-      border: 1px solid var(--caramel);
-      border-radius: var(--radius-sm);
-      padding: 7px 10px;
-      z-index: 300;
-      white-space: nowrap;
-      box-shadow: var(--shadow);
-      text-align: center;
-      min-width: 88px;
-    }
-    .seat-tip::after {
-      content: "";
-      position: absolute;
-      top: 100%; left: 50%;
-      transform: translateX(-50%);
-      border: 5px solid transparent;
-      border-top-color: var(--caramel);
-    }
-    .seat-tip p {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--cream);
-      margin-bottom: 5px;
-      letter-spacing: 0.3px;
-    }
-    .btn-elegir {
-      padding: 3px 11px;
-      background: var(--caramel);
-      color: var(--espresso);
-      border: none;
-      border-radius: 20px;
-      font-family: 'Jost', Arial, sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      margin: 0;
-      width: auto;
-      letter-spacing: 0.3px;
-    }
-    .btn-elegir:hover { background: var(--gold); }
-
-    /* Resaltado del input cuando se elige asiento */
-    input[name="asiento"].resaltado {
-      border-color: var(--caramel) !important;
-      box-shadow: 0 0 0 3px rgba(194,121,65,0.25) !important;
-      animation: pulsoInput 0.4s ease 2;
-    }
-    @keyframes pulsoInput {
-      0%, 100% { background: rgba(26,14,7,0.6); }
-      50%       { background: rgba(194,121,65,0.08); }
-    }
-  </style>
 </head>
 <body>
 
-  <!-- HERO HEADER -->
   <header class="hero-strip">
     <span class="hero-logo">☕</span>
-    <span class="hero-name">Cafetería Adulam</span>
+    <span class="hero-name">Cafetería </br> Mi Refugio</span>
     <span class="hero-tagline">Pide desde tu asiento</span>
     <div class="hero-ornament">
       <span class="hero-ornament-line"></span>
@@ -98,9 +24,7 @@
     </div>
   </header>
 
-  <!-- FORMULARIO -->
   <div class="container">
-
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <div class="alert">{{ messages[0] }}</div>
@@ -114,14 +38,13 @@
       <p class="app-inactiva-texto">{{ mensaje_inactiva or 'La cafetería no está disponible en este momento.' }}</p>
     </div>
     {% else %}
-    <form action="/login" method="POST" id="formLogin">
+    <form action="/login" method="POST">
       <label>Tu nombre</label>
       <input type="text" name="nombre" placeholder="Ej: María García" required autocomplete="off">
       <label>Tu asiento</label>
       <input type="text" name="asiento" id="inputAsiento" placeholder="Ej: B4" required maxlength="10" autocomplete="off">
-      <button type="submit" id="btnEntrar">Entrar al menú →</button>
+      <button type="submit">Entrar al menú</button>
     </form>
-
     <button id="btnInstalar" class="btn-instalar" style="display:none">
       <span class="instalar-icono">⬇</span> Instalar app en este dispositivo
     </button>
@@ -129,88 +52,229 @@
     {% endif %}
   </div>
 
-  <!-- GUÍA DE ASIENTOS CON TOOLTIP -->
+  <!-- GUÍA DE ASIENTOS -->
   <div class="guia-asientos">
     <h3>Guía de Asientos</h3>
-    <p style="font-size:12px;color:rgba(245,234,216,0.38);text-align:center;margin-bottom:12px;letter-spacing:0.3px">
-      Toca tu asiento para seleccionarlo
-    </p>
     <div class="guia-scroll-wrap">
-      <div class="guia-interior">
+      <!--
+        guia-interior tiene position:relative.
+        CAF/MS1/MS2 van en position:absolute right:0 top:0,
+        dentro del mismo guia-interior, así siempre quedan
+        pegados al borde derecho del mapa sin importar el
+        ancho de pantalla. padding-right da el espacio.
+      -->
+      <div class="guia-interior" style="position:relative; padding-right:68px;">
+
         <div class="escenario">Escenario</div>
-        <div class="secciones">
-          {% for bloque_num in [0, 1, 2, 3, 4] %}
-          <div class="bloque {% if bloque_num == 2 %}bloque-centro{% endif %}">
-            {% for fila in ['A','B','C','D','E','F','G','H','I','J'] %}
-            <div class="seccion">
-              <div class="fila">{{ fila }}</div>
-              {% for num in range(bloque_num*4+1, bloque_num*4+5) %}
-              <div class="punto-wrapper">
-                <div class="numero">{{ num }}</div>
-                <div class="punto"
-                     data-seat="{{ fila }}{{ num }}"
-                     onclick="abrirTip(this, '{{ fila }}{{ num }}')">
+
+        <!-- Asientos -->
+        <div id="seccionAsientos">
+          <div class="secciones">
+            {% for bloque_num in [0, 1, 2, 3, 4] %}
+            <div class="bloque {% if bloque_num == 2 %}bloque-centro{% endif %}">
+              {% for fila in ['A','B','C','D','E','F','G','H','I','J'] %}
+              <div class="seccion">
+                <div class="fila">{{ fila }}</div>
+                {% for num in range(bloque_num*4+1, bloque_num*4+5) %}
+                <div class="punto-wrapper">
+                  <div class="numero">{{ num }}</div>
+                  <div class="punto punto-asiento"
+                       data-codigo="{{ fila }}{{ '%02d'|format(num) }}"
+                       data-label="Asiento {{ fila }}{{ num }}"></div>
                 </div>
-                <div class="seat-tip" id="tip-{{ fila }}{{ num }}">
-                  <p>Asiento {{ fila }}{{ num }}</p>
-                  <button class="btn-elegir" onclick="elegirAsiento('{{ fila }}{{ num }}', event)">Elegir</button>
-                </div>
+                {% endfor %}
               </div>
               {% endfor %}
             </div>
             {% endfor %}
           </div>
-          {% endfor %}
         </div>
-      </div>
+
+        <!-- CAF/MS1/MS2: absoluto, pegado al borde derecho -->
+        <div style="position:absolute; right:0; top:0;
+                    display:flex; flex-direction:column; align-items:center; gap:5px; width:60px;">
+          <span style="font-size:7px;font-weight:600;text-transform:uppercase;
+                       letter-spacing:1px;color:rgba(245,234,216,0.32);white-space:nowrap;">
+            Cafetería
+          </span>
+          <div class="mapa-especial mapa-caf" data-codigo="CAF" data-label="Cafetería / Mostrador">
+            <span style="font-size:14px;">☕</span>
+            <span class="mapa-codigo" style="color:var(--caramel);">CAF</span>
+          </div>
+          <div class="mapa-especial mapa-mesa" data-codigo="MS1" data-label="Mesa 1">
+            <span class="mapa-codigo">MS1</span>
+          </div>
+          <div class="mapa-especial mapa-mesa" data-codigo="MS2" data-label="Mesa 2">
+            <span class="mapa-codigo">MS2</span>
+          </div>
+        </div>
+
+        <!-- MUL: centrado debajo de los asientos -->
+        <div style="display:flex; justify-content:center; margin-top:6px;">
+          <div class="mapa-especial mapa-mul" data-codigo="MUL" data-label="Zona Multimedia">
+            <span style="font-size:13px;">📺</span>
+            <span class="mapa-codigo" style="color:rgba(45,122,80,0.9);">MUL</span>
+          </div>
+        </div>
+
+        <!-- Mesas interiores (solo después 3:10 PM) -->
+        <div id="mesasInteriores" style="display:none; margin-top:22px;">
+          <p style="font-size:10px;font-weight:600;text-transform:uppercase;
+                    letter-spacing:2px;color:var(--caramel);margin-bottom:10px;text-align:center;">
+            Mesas interiores
+          </p>
+          <div style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap;">
+            <div class="mapa-especial mapa-mesa-int" data-codigo="MI1" data-label="Mesa interior 1">
+              <span class="mapa-codigo-lg">MI1</span>
+            </div>
+            <div class="mapa-especial mapa-mesa-int" data-codigo="MI2" data-label="Mesa interior 2">
+              <span class="mapa-codigo-lg">MI2</span>
+            </div>
+            <div class="mapa-especial mapa-mesa-int" data-codigo="MI3" data-label="Mesa interior 3">
+              <span class="mapa-codigo-lg">MI3</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /guia-interior -->
     </div>
     <p class="scroll-hint-login">← Desliza para ver todos los asientos →</p>
   </div>
 
+  <!-- Tooltip position:fixed, fuera del scroll -->
+  <div id="asientoTooltip" style="
+    display:none; position:fixed; z-index:500;
+    background:var(--roast); border:1px solid var(--border-md);
+    border-radius:var(--radius-sm); padding:10px 14px;
+    box-shadow:var(--shadow); min-width:124px; text-align:center;
+    pointer-events:none;
+  ">
+    <span id="tooltipLabel" style="display:block;font-size:13px;font-weight:600;
+          color:var(--gold);margin-bottom:7px;"></span>
+    <button id="tooltipBtn" style="
+      pointer-events:all; padding:5px 16px;
+      background:var(--caramel); color:var(--espresso);
+      border:none; border-radius:var(--radius-xs);
+      font-family:'Jost',Arial,sans-serif;
+      font-size:12px; font-weight:700; cursor:pointer;
+    ">Elegir</button>
+  </div>
+
+<style>
+.punto-asiento { cursor:pointer; }
+.punto-asiento:hover { opacity:1; transform:scale(1.3); }
+.punto-asiento.seleccionado { background:var(--caramel) !important; opacity:1; }
+
+.guia-scroll-wrap { scrollbar-width:none; }
+.guia-scroll-wrap::-webkit-scrollbar { display:none; }
+
+.mapa-especial {
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; cursor:pointer; border-radius:5px;
+  transition:background 0.15s, transform 0.15s, border-color 0.15s;
+  user-select:none; gap:2px;
+}
+.mapa-especial:hover { transform:scale(1.08); }
+.mapa-especial.seleccionado {
+  border-color:var(--gold) !important;
+  background:rgba(194,121,65,0.20) !important;
+}
+
+.mapa-codigo    { font-size:8px;  font-weight:700; letter-spacing:0.8px; color:var(--cream); }
+.mapa-codigo-lg { font-size:11px; font-weight:700; letter-spacing:0.8px; color:var(--cream); }
+
+.mapa-caf {
+  width:54px; height:40px;
+  background:rgba(194,121,65,0.14);
+  border:1.5px solid var(--caramel);
+}
+.mapa-mesa {
+  width:46px; height:26px;
+  background:var(--mist);
+  border:1.5px solid var(--border-md);
+}
+.mapa-mul {
+  width:90px; height:34px;
+  background:rgba(45,122,80,0.08);
+  border:1.5px dashed rgba(45,122,80,0.55);
+  flex-direction:row; gap:6px;
+}
+.mapa-mesa-int {
+  width:62px; height:40px;
+  background:var(--mist);
+  border:1.5px solid var(--border-md);
+}
+
+.modo-tarde .punto-asiento,
+.modo-tarde .numero { display:none !important; }
+</style>
+
 <script>
-/* ── TOOLTIP DEL MAPA ── */
-var puntoActivo = null;
-
-function abrirTip(el, seatId) {
-  if (puntoActivo === el) { cerrarTips(); return; }
-  cerrarTips();
-  el.classList.add('activo');
-  puntoActivo = el;
-  var tip = document.getElementById('tip-' + seatId);
-  if (tip) tip.style.display = 'block';
-}
-
-function cerrarTips() {
-  document.querySelectorAll('.punto.activo').forEach(function(p) { p.classList.remove('activo'); });
-  document.querySelectorAll('.seat-tip').forEach(function(t) { t.style.display = 'none'; });
-  puntoActivo = null;
-}
-
-function elegirAsiento(seatId, evt) {
-  evt.stopPropagation();
-  var input = document.getElementById('inputAsiento');
-  if (input) {
-    input.value = seatId.toUpperCase();
-    // Resaltar brevemente el input
-    input.classList.add('resaltado');
-    setTimeout(function() { input.classList.remove('resaltado'); }, 900);
+(function() {
+  var ahora = new Date();
+  var tarde = ahora.getHours() > 15 || (ahora.getHours() === 15 && ahora.getMinutes() >= 10);
+  if (tarde) {
+    document.getElementById('seccionAsientos').classList.add('modo-tarde');
+    document.getElementById('mesasInteriores').style.display = 'block';
   }
-  cerrarTips();
-  // Scroll al botón de entrar
-  var btn = document.getElementById('btnEntrar');
-  if (btn) {
-    btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    btn.style.boxShadow = '0 0 0 3px rgba(194,121,65,0.45)';
-    setTimeout(function() { btn.style.boxShadow = ''; }, 1600);
-  }
+})();
+
+var tooltip      = document.getElementById('asientoTooltip');
+var tooltipLbl   = document.getElementById('tooltipLabel');
+var tooltipBtn   = document.getElementById('tooltipBtn');
+var inputAsiento = document.getElementById('inputAsiento');
+var selActual    = null;
+
+function mostrarTooltip(el, codigo, label) {
+  tooltipLbl.textContent = label;
+  tooltipBtn.onclick = function(e) {
+    e.stopPropagation();
+    elegirAsiento(el, codigo);
+  };
+  var r    = el.getBoundingClientRect();
+  var tw   = 130;
+  var left = r.left + r.width / 2 - tw / 2;
+  var top  = r.bottom + 8;
+  if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
+  if (left < 8) left = 8;
+  if (top + 72 > window.innerHeight) top = r.top - 72;
+  tooltip.style.left    = left + 'px';
+  tooltip.style.top     = top  + 'px';
+  tooltip.style.display = 'block';
 }
 
-// Cerrar tooltip al tocar fuera
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.punto-wrapper')) cerrarTips();
+function ocultarTooltip() { tooltip.style.display = 'none'; }
+
+function elegirAsiento(el, codigo) {
+  if (inputAsiento) {
+    inputAsiento.value = codigo;
+    inputAsiento.scrollIntoView({ behavior:'smooth', block:'center' });
+    inputAsiento.focus();
+  }
+  if (selActual) selActual.classList.remove('seleccionado');
+  el.classList.add('seleccionado');
+  selActual = el;
+  ocultarTooltip();
+}
+
+document.querySelectorAll('.punto-asiento').forEach(function(dot) {
+  dot.addEventListener('click', function(e) {
+    e.stopPropagation();
+    mostrarTooltip(dot, dot.dataset.codigo, dot.dataset.label);
+  });
 });
 
-/* ── PWA ── */
+document.querySelectorAll('.mapa-especial').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    e.stopPropagation();
+    mostrarTooltip(el, el.dataset.codigo, el.dataset.label);
+  });
+});
+
+document.addEventListener('click', function(e) {
+  if (!tooltip.contains(e.target)) ocultarTooltip();
+});
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/static/sw.js').catch(function(e) { console.log('SW:', e); });
 }
@@ -225,15 +289,21 @@ if (btnInstalar) {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(function(r) {
-      if (r.outcome === 'accepted') { btnInstalar.style.display = 'none'; pwaInstalada.style.display = 'block'; }
+      if (r.outcome === 'accepted') {
+        btnInstalar.style.display = 'none';
+        pwaInstalada.style.display = 'block';
+      }
       deferredPrompt = null;
     });
   });
   if (window.matchMedia('(display-mode: standalone)').matches) {
-    btnInstalar.style.display = 'none'; pwaInstalada.style.display = 'block';
+    btnInstalar.style.display = 'none';
+    pwaInstalada.style.display = 'block';
   }
   window.addEventListener('appinstalled', function() {
-    btnInstalar.style.display = 'none'; pwaInstalada.style.display = 'block'; deferredPrompt = null;
+    btnInstalar.style.display = 'none';
+    pwaInstalada.style.display = 'block';
+    deferredPrompt = null;
   });
 }
 </script>
